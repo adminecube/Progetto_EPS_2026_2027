@@ -25,9 +25,12 @@ public class UserThread implements Runnable{
 	
 	@Override
 	public void run() {
+		
+		Strumento strumentoAssegnato = null;
+		
 		try {
-			//L'utente richiede lo strumento (il monitor gestirà l'eventuale attesa)
-			Strumento strumentoAssegnato = monitor.richiediStrumento(tipoRichiesto, nomeUtente);
+			//L'utente richiede lo strumento (il monitor gestirï¿½ l'eventuale attesa)
+			strumentoAssegnato = monitor.richiediStrumento(tipoRichiesto, nomeUtente);
 			// Se il thread viene interrotto durante l'attesa, il monitor restituisce null
 			if(strumentoAssegnato==null)
 				return;
@@ -35,13 +38,16 @@ public class UserThread implements Runnable{
 			//I tempi di simulazione rappresentano la durata di un prestito
 			int tempoUtilizzo = T_UTILIZZO_MIN + rnd.nextInt(T_UTILIZZO_MAX-T_UTILIZZO_MIN);
 			Thread.sleep(tempoUtilizzo);
-			//L'utente restituisce lo strumento al laboratorio
-			monitor.restituisciStrumento(strumentoAssegnato, nomeUtente);
 			
 		} catch (InterruptedException e) {
 			// Se il thread viene interrotto durante lo sleep() (mentre ha lo strumento)
 			// deve comunque segnalare la fine dell'esecuzione in modo pulito
 			Thread.currentThread().interrupt();
+		}finally {
+		    // Eseguito sempre, ma la restituzione avviene solo se la risorsa Ã¨ stata acquisita
+		    if (strumentoAssegnato != null) {
+		        monitor.restituisciStrumento(strumentoAssegnato, nomeUtente);
+		    }
 		}
 		
 	}
