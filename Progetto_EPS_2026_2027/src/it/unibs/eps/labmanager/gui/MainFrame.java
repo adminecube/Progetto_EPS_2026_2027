@@ -19,11 +19,20 @@ import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 
+import it.unibs.eps.labmanager.concurrency.MonitorLaboratorio;
+import it.unibs.eps.labmanager.model.Catalogo;
+import it.unibs.eps.labmanager.simulation.GestoreSimulazione;
+
 public class MainFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel mainPane;
 	private JTable tableRegistroEventi;
+	
+	private GestoreSimulazione gestoreSimulazione;
+	private MonitorLaboratorio monitor;
+	private Catalogo catalogo;
+	
 	
 	// palette colori
 	private Color colorBg = new Color(244, 245, 247);         
@@ -32,9 +41,31 @@ public class MainFrame extends JFrame {
 	private Color colorTextDark = new Color(30, 41, 59);  
 	private JTable tabStrumenti;
 	private JTable tabRichieste;
+	private JButton btnInterrompi;
+	private JButton btnAvvioSimulazione;
 	
-	public MainFrame() {
+	public MainFrame(MonitorLaboratorio monitor, GestoreSimulazione gestoreSimulazione) {
+		
+		this.monitor = monitor;
+		this.gestoreSimulazione = gestoreSimulazione;
+		
 		InitUI();
+		
+		setBtnListeners();
+	}
+	
+	private void setBtnListeners() {
+		
+		btnAvvioSimulazione.addActionListener(e -> {
+			
+			gestoreSimulazione.avviaSim();
+		});
+		
+		btnInterrompi.addActionListener(e -> {
+			
+			gestoreSimulazione.interrompiSimulazione();
+		});
+		
 	}
 	
 	private void InitUI() {
@@ -97,7 +128,7 @@ public class MainFrame extends JFrame {
 		tableRegistroEventi = new JTable();
 		tableRegistroEventi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		tableRegistroEventi.setRowHeight(22);
-		tableRegistroEventi.setGridColor(colorBorder);
+		tableRegistroEventi.setGridColor(colorBorder);		
 		
 		JScrollPane scrollTable = new JScrollPane(tableRegistroEventi);
 		scrollTable.setBorder(new LineBorder(colorBorder, 1, true));
@@ -201,12 +232,12 @@ public class MainFrame extends JFrame {
 		txtStatoMonitor.setBackground(new Color(244, 245, 247));
 		panelSimulazione.add(txtStatoMonitor);
 		
-		JButton btnAvvioSimulazione = new JButton("Avvio Simulazione");
+		btnAvvioSimulazione = new JButton("Avvio Simulazione");
 		btnAvvioSimulazione.setFont(new Font("Segoe UI", Font.BOLD, 14));
 		btnAvvioSimulazione.setForeground(colorTextDark);
 		panelSimulazione.add(btnAvvioSimulazione);
 		
-		JButton btnInterrompi = new JButton("Interrompi");
+		btnInterrompi = new JButton("Interrompi");
 		btnInterrompi.setFont(new Font("Segoe UI", Font.BOLD, 14));
 		btnInterrompi.setForeground(colorTextDark);
 		panelSimulazione.add(btnInterrompi);
