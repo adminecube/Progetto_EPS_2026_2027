@@ -11,6 +11,7 @@ import java.awt.event.ActionListener;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -18,58 +19,95 @@ import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableModel;
 
 import it.unibs.eps.labmanager.concurrency.MonitorLaboratorio;
 import it.unibs.eps.labmanager.model.Catalogo;
+import it.unibs.eps.labmanager.model.Strumento;
 import it.unibs.eps.labmanager.simulation.GestoreSimulazione;
 
 public class MainFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel mainPane;
-	private JTable tableRegistroEventi;
 	
 	private GestoreSimulazione gestoreSimulazione;
 	private MonitorLaboratorio monitor;
 	private Catalogo catalogo;
 	
-	
-	// palette colori
+	// Palette colori
 	private Color colorBg = new Color(244, 245, 247);         
 	private Color colorCard = new Color(255, 255, 255);        
 	private Color colorBorder = new Color(226, 232, 240);     
 	private Color colorTextDark = new Color(30, 41, 59);  
+	
+	// Tabelle
 	private JTable tabStrumenti;
 	private JTable tabRichieste;
+	private JTable tableRegistroEventi;
+	
+	// Modelli delle tabelle estratti come campi di classe
+	private DefaultTableModel modelStrumenti;
+	private DefaultTableModel modelRichieste;
+	private DefaultTableModel modelRegistroEventi;
+	
+	// Pulsanti
 	private JButton btnInterrompi;
 	private JButton btnAvvioSimulazione;
+	private JButton btnAggiungiStrumento;
+	
+	// Etichette dell'UpperPanel
+	private JLabel lblValoreDisponibili;
+	private JLabel lblValorePrestito;
+	private JLabel lblValoreAttesa;
+	
+	private FrameCreaStrumento frameCreaStrumento;
 	
 	public MainFrame(MonitorLaboratorio monitor, GestoreSimulazione gestoreSimulazione) {
+		
+		this.frameCreaStrumento = new FrameCreaStrumento((strumento) -> monitor.aggiungiStrumento(strumento));
 		
 		this.monitor = monitor;
 		this.gestoreSimulazione = gestoreSimulazione;
 		
-		InitUI();
+		monitor.setListener(() -> {
+			aggiornaGUI();
+		});
 		
+		InitUI();
 		setBtnListeners();
+		aggiornaGUI();
+	}
+	
+	public void aggiornaGUI() {
+		aggiornaTabStrumenti();
+		// In futuro: aggiornaTabRichieste(), aggiornaTabRegistro(), aggiornaUpperPanel()
+	}
+	
+	public void aggiornaTabStrumenti() {
+		if (monitor == null || modelStrumenti == null) return;
+		
+		modelStrumenti.setRowCount(0); // Svuota la tabella prima del ripopolamento
+		
+		for (Strumento s : monitor.getCatalogo().getTuttiStrumenti()) {
+			modelStrumenti.addRow(new Object[]{
+				s.getTipo(),
+				s.getId(),
+				s.getStato()
+			});
+		}
 	}
 	
 	private void setBtnListeners() {
-		
-		btnAvvioSimulazione.addActionListener(e -> {
+		btnAvvioSimulazione.addActionListener(e -> gestoreSimulazione.avviaSim());
+		btnInterrompi.addActionListener(e -> gestoreSimulazione.interrompiSimulazione());
+		btnAggiungiStrumento.addActionListener(e -> {
 			
-			gestoreSimulazione.avviaSim();
+			frameCreaStrumento.setVisible(true);
 		});
-		
-		btnInterrompi.addActionListener(e -> {
-			
-			gestoreSimulazione.interrompiSimulazione();
-		});
-		
 	}
 	
 	private void InitUI() {
-		
 		try {
 		    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
@@ -125,16 +163,22 @@ public class MainFrame extends JFrame {
 		txtRegistroEventi.setText("Registro Eventi");
 		panelRegistroEventi.add(txtRegistroEventi, BorderLayout.NORTH);
 		
-		tableRegistroEventi = new JTable();
+		modelRegistroEventi = buildTableREModel();
+		tableRegistroEventi = new JTable(modelRegistroEventi);
 		tableRegistroEventi.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		tableRegistroEventi.setRowHeight(22);
-		tableRegistroEventi.setGridColor(colorBorder);		
+		tableRegistroEventi.setGridColor(colorBorder);
 		
 		JScrollPane scrollTable = new JScrollPane(tableRegistroEventi);
 		scrollTable.setBorder(new LineBorder(colorBorder, 1, true));
 		panelRegistroEventi.add(scrollTable, BorderLayout.CENTER);
 		
 		return panelRegistroEventi;
+	}
+	
+	private DefaultTableModel buildTableREModel() {
+		String[] intestazione = {"Orario", "Evento"};
+		return new DefaultTableModel(intestazione, 0);
 	}
 
 	private JPanel buildPanelCentrale() {
@@ -148,7 +192,6 @@ public class MainFrame extends JFrame {
 		
 		JPanel panelStrumenti = buildPanelStrumenti();
 		panelCentrale.add(panelStrumenti);
-		
 		
 		JPanel panelRichieste = buildPanelRichieste();
 		panelCentrale.add(panelRichieste);
@@ -178,10 +221,16 @@ public class MainFrame extends JFrame {
 		panelRichieste.add(scrollPaneRichieste, BorderLayout.CENTER);
 		scrollPaneRichieste.setPreferredSize(new Dimension(200, 120));
 		
-		tabRichieste = new JTable();
+		modelRichieste = buildTableRichiesteModel();
+		tabRichieste = new JTable(modelRichieste);
 		scrollPaneRichieste.setViewportView(tabRichieste);
 		
 		return panelRichieste;
+	}
+	
+	private DefaultTableModel buildTableRichiesteModel() {
+		String[] intestazione = {"Utente", "Strumento", "Stato"};
+		return new DefaultTableModel(intestazione, 0);
 	}
 
 	private JPanel buildPanelStrumenti() {
@@ -201,12 +250,18 @@ public class MainFrame extends JFrame {
 		
 		JScrollPane scrollPaneStrumenti = new JScrollPane();
 		panelStrumenti.add(scrollPaneStrumenti, BorderLayout.CENTER);
-		scrollPaneStrumenti.setPreferredSize(new Dimension(200, 120));;
+		scrollPaneStrumenti.setPreferredSize(new Dimension(200, 120));
 		
-		tabStrumenti = new JTable();
+		modelStrumenti = buildTableStrumentiModel();
+		tabStrumenti = new JTable(modelStrumenti);
 		scrollPaneStrumenti.setViewportView(tabStrumenti);
 		
 		return panelStrumenti;
+	}
+	
+	private DefaultTableModel buildTableStrumentiModel() {
+		String[] intestazione = {"Nome", "Codice", "Stato"};
+		return new DefaultTableModel(intestazione, 0);
 	}
 
 	private JPanel buildPanelSimulazione() {
@@ -268,72 +323,91 @@ public class MainFrame extends JFrame {
 		});
 		panelGestioneDati.add(loadButton);
 		
+		btnAggiungiStrumento = new JButton("Aggiungi Strumento");
+		btnAggiungiStrumento.setPreferredSize(new Dimension(150, 26));
+		btnAggiungiStrumento.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+		panelGestioneDati.add(btnAggiungiStrumento);
+		
 		return panelGestioneDati;
 	}
 
 	private JPanel buildUpperPanel() {
-		JPanel panelSuperiore = new JPanel();
-		panelSuperiore.setBackground(colorCard);
-		panelSuperiore.setBorder(BorderFactory.createCompoundBorder(
-			new LineBorder(colorBorder, 1, true),
-			new EmptyBorder(10, 10, 10, 10)
-		));
-		// Definisce l'altezza preferita a 85px (in BorderLayout.NORTH la larghezza viene adattata automaticamente)
-		panelSuperiore.setPreferredSize(new Dimension(0, 85));
-		panelSuperiore.setLayout(new GridLayout(1, 3, 10, 0));
-		
-		JPanel panelDisponibili = new JPanel();
-		panelDisponibili.setBackground(colorBg);
-		panelDisponibili.setBorder(BorderFactory.createCompoundBorder(
-			new LineBorder(colorBorder, 1, true),
-			new EmptyBorder(6, 10, 6, 10)
-		));
-		panelDisponibili.setLayout(new BorderLayout(0, 0));
-		panelSuperiore.add(panelDisponibili);
-		
-		JTextPane txtpnStrumentiDisponibili = new JTextPane();
-		txtpnStrumentiDisponibili.setText("Strumenti disponibili: ");
-		txtpnStrumentiDisponibili.setForeground(new Color(30, 41, 59));
-		txtpnStrumentiDisponibili.setFont(new Font("Segoe UI", Font.BOLD, 14));
-		txtpnStrumentiDisponibili.setEditable(false);
-		txtpnStrumentiDisponibili.setBackground(new Color(244, 245, 247));
-		panelDisponibili.add(txtpnStrumentiDisponibili, BorderLayout.NORTH);
-		
-		JPanel panelPrestito = new JPanel();
-		panelPrestito.setBackground(colorBg);
-		panelPrestito.setBorder(BorderFactory.createCompoundBorder(
-			new LineBorder(colorBorder, 1, true),
-			new EmptyBorder(6, 10, 6, 10)
-		));
-		panelPrestito.setLayout(new BorderLayout(0, 0));
-		panelSuperiore.add(panelPrestito);
-		
-		JTextPane txtpnStrumenti = new JTextPane();
-		txtpnStrumenti.setText("Strumenti in prestito:");
-		txtpnStrumenti.setForeground(new Color(30, 41, 59));
-		txtpnStrumenti.setFont(new Font("Segoe UI", Font.BOLD, 14));
-		txtpnStrumenti.setEditable(false);
-		txtpnStrumenti.setBackground(new Color(244, 245, 247));
-		panelPrestito.add(txtpnStrumenti, BorderLayout.NORTH);
-		
-		JPanel panelAttesa = new JPanel();
-		panelAttesa.setBackground(colorBg);
-		panelAttesa.setBorder(BorderFactory.createCompoundBorder(
-			new LineBorder(colorBorder, 1, true),
-			new EmptyBorder(6, 10, 6, 10)
-		));
-		panelAttesa.setLayout(new BorderLayout(0, 0));
-		panelSuperiore.add(panelAttesa);
-		
-		JTextPane txtpnUtentiInAttesa = new JTextPane();
-		txtpnUtentiInAttesa.setText("Utenti in attesa:");
-		txtpnUtentiInAttesa.setForeground(new Color(30, 41, 59));
-		txtpnUtentiInAttesa.setFont(new Font("Segoe UI", Font.BOLD, 14));
-		txtpnUtentiInAttesa.setEditable(false);
-		txtpnUtentiInAttesa.setBackground(new Color(244, 245, 247));
-		panelAttesa.add(txtpnUtentiInAttesa, BorderLayout.NORTH);
-		
-		return panelSuperiore;
+	    JPanel panelSuperiore = new JPanel();
+	    panelSuperiore.setBackground(colorCard);
+	    panelSuperiore.setBorder(BorderFactory.createCompoundBorder(
+	        new LineBorder(colorBorder, 1, true),
+	        new EmptyBorder(10, 10, 10, 10)
+	    ));
+	    panelSuperiore.setPreferredSize(new Dimension(0, 85));
+	    panelSuperiore.setLayout(new GridLayout(1, 3, 10, 0));
+	    
+	    // --- 1. PANNELLO DISPONIBILI ---
+	    JPanel panelDisponibili = new JPanel(new BorderLayout(0, 0));
+	    panelDisponibili.setBackground(colorBg);
+	    panelDisponibili.setBorder(BorderFactory.createCompoundBorder(
+	        new LineBorder(colorBorder, 1, true),
+	        new EmptyBorder(6, 10, 6, 10)
+	    ));
+	    
+	    JTextPane txtpnDisponibili = new JTextPane();
+	    txtpnDisponibili.setText("Strumenti disponibili:");
+	    txtpnDisponibili.setFont(new Font("Segoe UI", Font.BOLD, 12));
+	    txtpnDisponibili.setEditable(false);
+	    txtpnDisponibili.setBackground(colorBg);
+	    panelDisponibili.add(txtpnDisponibili, BorderLayout.NORTH);
+	    
+	    lblValoreDisponibili = new JLabel("0", javax.swing.SwingConstants.CENTER);
+	    lblValoreDisponibili.setFont(new Font("Segoe UI", Font.BOLD, 18));
+	    lblValoreDisponibili.setForeground(colorTextDark);
+	    panelDisponibili.add(lblValoreDisponibili, BorderLayout.CENTER);
+	    
+	    panelSuperiore.add(panelDisponibili);
+
+	    // --- 2. PANNELLO IN PRESTITO ---
+	    JPanel panelPrestito = new JPanel(new BorderLayout(0, 0));
+	    panelPrestito.setBackground(colorBg);
+	    panelPrestito.setBorder(BorderFactory.createCompoundBorder(
+	        new LineBorder(colorBorder, 1, true),
+	        new EmptyBorder(6, 10, 6, 10)
+	    ));
+	    
+	    JTextPane txtpnPrestito = new JTextPane();
+	    txtpnPrestito.setText("Strumenti in prestito:");
+	    txtpnPrestito.setFont(new Font("Segoe UI", Font.BOLD, 12));
+	    txtpnPrestito.setEditable(false);
+	    txtpnPrestito.setBackground(colorBg);
+	    panelPrestito.add(txtpnPrestito, BorderLayout.NORTH);
+	    
+	    lblValorePrestito = new JLabel("0", javax.swing.SwingConstants.CENTER);
+	    lblValorePrestito.setFont(new Font("Segoe UI", Font.BOLD, 18));
+	    lblValorePrestito.setForeground(colorTextDark);
+	    panelPrestito.add(lblValorePrestito, BorderLayout.CENTER);
+	    
+	    panelSuperiore.add(panelPrestito);
+
+	    // --- 3. PANNELLO IN ATTESA ---
+	    JPanel panelAttesa = new JPanel(new BorderLayout(0, 0));
+	    panelAttesa.setBackground(colorBg);
+	    panelAttesa.setBorder(BorderFactory.createCompoundBorder(
+	        new LineBorder(colorBorder, 1, true),
+	        new EmptyBorder(6, 10, 6, 10)
+	    ));
+	    
+	    JTextPane txtpnAttesa = new JTextPane();
+	    txtpnAttesa.setText("Utenti in attesa:");
+	    txtpnAttesa.setFont(new Font("Segoe UI", Font.BOLD, 12));
+	    txtpnAttesa.setEditable(false);
+	    txtpnAttesa.setBackground(colorBg);
+	    panelAttesa.add(txtpnAttesa, BorderLayout.NORTH);
+	    
+	    lblValoreAttesa = new JLabel("0", javax.swing.SwingConstants.CENTER);
+	    lblValoreAttesa.setFont(new Font("Segoe UI", Font.BOLD, 18));
+	    lblValoreAttesa.setForeground(colorTextDark);
+	    panelAttesa.add(lblValoreAttesa, BorderLayout.CENTER);
+	    
+	    panelSuperiore.add(panelAttesa);
+
+	    return panelSuperiore;
 	}
 
 	private JPanel buildMainPanel() {

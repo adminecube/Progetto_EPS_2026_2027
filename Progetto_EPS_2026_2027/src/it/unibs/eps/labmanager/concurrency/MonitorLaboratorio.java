@@ -9,6 +9,8 @@ public class MonitorLaboratorio {
 	private final Catalogo catalogo;
 	private final List<EventLog> registroEventi; // Storico consultabile
 	
+	private ListenerLaboratorio listener;
+	
 	//Costruttore
 	public MonitorLaboratorio(Catalogo catalogo) {
 		this.catalogo=catalogo;
@@ -18,7 +20,7 @@ public class MonitorLaboratorio {
 	public synchronized Strumento richiediStrumento(TipoStrumento tipo,String nomeUtente) {
 		Strumento strumentoTrovato = catalogo.trovaStrumentoDisponibile(tipo);
 		
-		// Se lo strumento non è subito disponibile, si registra l'attesa una sola volta
+		// Se lo strumento non ï¿½ subito disponibile, si registra l'attesa una sola volta
 		if(strumentoTrovato==null)
 			registraEvento(nomeUtente + " in attesa di "+ tipo);
 		// Un thread in attesa deve ricontrollare la condizione al risveglio
@@ -34,14 +36,14 @@ public class MonitorLaboratorio {
 			// Al risveglio, delega nuovamente la ricerca al Catalogo
 			strumentoTrovato = catalogo.trovaStrumentoDisponibile(tipo);
 		}
-		// Il controllo della disponibilità e l'assegnazione avvengono come un'unica operazione protetta
+		// Il controllo della disponibilitï¿½ e l'assegnazione avvengono come un'unica operazione protetta
 		strumentoTrovato.setStato(StatoStrumento.IN_PRESTITO);
         registraEvento(nomeUtente + " ottiene " + strumentoTrovato.getId());
         return strumentoTrovato;
 	}
 	/*
      * Metodo privato per aggiungere un log in tempo reale.
-     * È sicuro perché richiamato solo dall'interno di metodi synchronized.
+     * ï¿½ sicuro perchï¿½ richiamato solo dall'interno di metodi synchronized.
      */
 	private void registraEvento(String descrizione) {
 		registroEventi.add(new EventLog(descrizione));
@@ -57,10 +59,31 @@ public class MonitorLaboratorio {
     }
     /*
      * Restituisce una copia dello storico per visualizzarlo o salvarlo.
-     * È synchronized per evitare letture inconsistenti durante la scrittura.
+     * ï¿½ synchronized per evitare letture inconsistenti durante la scrittura.
      */
     public synchronized List<EventLog> getRegistroEventi() {
         return new ArrayList<>(registroEventi); 
+    }
+    
+    public synchronized void aggiungiStrumento(Strumento strumento) {
+    	catalogo.aggiungiStrumento(strumento);
+        registraEvento("Nuovo strumento aggiunto: " + strumento.getId() + " (" + strumento.getTipo() + ")");
+        
+        // Risveglia eventuali thread che attendevano uno strumento di questo tipo
+        notifyAll();
+        
+        // Aggiorna l'interfaccia grafica
+        notificaCambioStato();
+    }
+    
+    public void setListener(ListenerLaboratorio listener) {
+    	this.listener = listener;
+    }
+    
+    private void notificaCambioStato() {
+    	if (listener != null) {
+            javax.swing.SwingUtilities.invokeLater(() -> listener.statoCambiato());
+        }
     }
 
 	public Catalogo getCatalogo() {

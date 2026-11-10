@@ -29,7 +29,7 @@ public class Catalogo {
 	
 	/**
 	 * @param tipo 	il tipo di strumento richiesto
-	 * @return		ritorna il primo strumento libero richiesto, oppure ritorna null se non è disponibile nessuno strumento
+	 * @return		ritorna il primo strumento libero richiesto, oppure ritorna null se non ï¿½ disponibile nessuno strumento
 	 */
 	public Strumento trovaStrumentoDisponibile(TipoStrumento tipo) {
 		return strumenti.stream()					// 1. Converte la lista degli strumenti in un flusso di dati (Stream)
@@ -40,7 +40,7 @@ public class Catalogo {
 	}
 	
 	public List<Strumento> getTuttiStrumenti(){
-		return Collections.unmodifiableList(strumenti);
+		return List.copyOf(strumenti);
 	}
 	
 	public List<Strumento> getStrumentiDisponibili(){
