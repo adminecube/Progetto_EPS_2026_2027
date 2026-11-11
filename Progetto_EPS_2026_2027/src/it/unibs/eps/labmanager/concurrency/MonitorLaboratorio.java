@@ -4,6 +4,11 @@ import it.unibs.eps.labmanager.model.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author Lorenzo Manna
+ * @author Simone Biagi
+ */
+
 public class MonitorLaboratorio {
 	//Lista contenente gli strumenti
 	private final Catalogo catalogo;
@@ -12,17 +17,32 @@ public class MonitorLaboratorio {
 	private ListenerLaboratorio listener;
 	
 	//Costruttore
+	/**
+	 * @author Simone Biagi
+	 * @param catalogo
+	 */
 	public MonitorLaboratorio(Catalogo catalogo) {
 		this.catalogo=catalogo;
 		this.registroEventi = new ArrayList<>();
 	}
 	
+	
+	/**
+	 * 
+	 * @param tipo
+	 * @param nomeUtente
+	 * @return
+	 * @author Simone Biagi
+	 * @author Lorenzo Manna
+	 */
 	public synchronized Strumento richiediStrumento(TipoStrumento tipo,String nomeUtente) {
 		Strumento strumentoTrovato = catalogo.trovaStrumentoDisponibile(tipo);
 		
 		// Se lo strumento non � subito disponibile, si registra l'attesa una sola volta
-		if(strumentoTrovato==null)
+		if(strumentoTrovato==null) {
 			registraEvento(nomeUtente + " in attesa di "+ tipo);
+			notificaCambioStato();
+		}
 		// Un thread in attesa deve ricontrollare la condizione al risveglio
 		while(strumentoTrovato==null) {
 			try {
@@ -39,9 +59,11 @@ public class MonitorLaboratorio {
 		// Il controllo della disponibilit� e l'assegnazione avvengono come un'unica operazione protetta
 		strumentoTrovato.setStato(StatoStrumento.IN_PRESTITO);
         registraEvento(nomeUtente + " ottiene " + strumentoTrovato.getId());
+        notificaCambioStato();
         return strumentoTrovato;
 	}
-	/*
+	/**
+	 * @author Simone Biagi
      * Metodo privato per aggiungere un log in tempo reale.
      * � sicuro perch� richiamato solo dall'interno di metodi synchronized.
      */
@@ -51,20 +73,34 @@ public class MonitorLaboratorio {
 	/*
      * Restituisce uno strumento al laboratorio e risveglia i thread in attesa.
      */
+	
+	/**
+	 * 
+	 * @param strumento
+	 * @param nomeUtente
+	 * @author Simone Biagi
+	 * @author Lorenzo Manna
+	 */
     public synchronized void restituisciStrumento(Strumento strumento, String nomeUtente) {
     	strumento.setStato(StatoStrumento.DISPONIBILE);
         registraEvento(nomeUtente + " restituisce " + strumento.getId());
+        notificaCambioStato();
         // La restituzione deve rendere possibile il progresso delle richieste in attesa
         notifyAll(); 
     }
-    /*
+    /**
+     * @author Simone Biagi
      * Restituisce una copia dello storico per visualizzarlo o salvarlo.
      * � synchronized per evitare letture inconsistenti durante la scrittura.
      */
     public synchronized List<EventLog> getRegistroEventi() {
-        return new ArrayList<>(registroEventi); 
+        return List.copyOf(registroEventi); 
     }
     
+    /**
+     * @author Lorenzo Manna
+     * @param strumento
+     */
     public synchronized void aggiungiStrumento(Strumento strumento) {
     	catalogo.aggiungiStrumento(strumento);
         registraEvento("Nuovo strumento aggiunto: " + strumento.getId() + " (" + strumento.getTipo() + ")");
@@ -75,16 +111,26 @@ public class MonitorLaboratorio {
         // Aggiorna l'interfaccia grafica
         notificaCambioStato();
     }
-    
+    /**
+     * @author Lorenzo Manna
+     * @param listener
+     */
     public void setListener(ListenerLaboratorio listener) {
     	this.listener = listener;
     }
     
+    /**
+     * @author Lorenzo Manna
+     */
     private void notificaCambioStato() {
     	if (listener != null) {
             javax.swing.SwingUtilities.invokeLater(() -> listener.statoCambiato());
         }
     }
+    /**
+     * @author Simone Biagi
+     * @return
+     */
 
 	public Catalogo getCatalogo() {
 		return catalogo;
