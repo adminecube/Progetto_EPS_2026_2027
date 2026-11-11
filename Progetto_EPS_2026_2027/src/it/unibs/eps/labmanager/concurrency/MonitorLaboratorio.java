@@ -13,6 +13,7 @@ public class MonitorLaboratorio {
 	//Lista contenente gli strumenti
 	private final Catalogo catalogo;
 	private final List<EventLog> registroEventi; // Storico consultabile
+	private final List<InfoRichiesta> listaRichieste;
 	
 	private ListenerLaboratorio listener;
 	
@@ -24,6 +25,7 @@ public class MonitorLaboratorio {
 	public MonitorLaboratorio(Catalogo catalogo) {
 		this.catalogo=catalogo;
 		this.registroEventi = new ArrayList<>();
+		this.listaRichieste = new ArrayList<>();
 	}
 	
 	
@@ -41,6 +43,7 @@ public class MonitorLaboratorio {
 		// Se lo strumento non � subito disponibile, si registra l'attesa una sola volta
 		if(strumentoTrovato==null) {
 			registraEvento(nomeUtente + " in attesa di "+ tipo);
+			aggiornaOCreaRichiesta(nomeUtente, tipo, StatoPrestito.IN_ATTESA);
 			notificaCambioStato();
 		}
 		// Un thread in attesa deve ricontrollare la condizione al risveglio
@@ -59,6 +62,7 @@ public class MonitorLaboratorio {
 		// Il controllo della disponibilit� e l'assegnazione avvengono come un'unica operazione protetta
 		strumentoTrovato.setStato(StatoStrumento.IN_PRESTITO);
         registraEvento(nomeUtente + " ottiene " + strumentoTrovato.getId());
+        aggiornaOCreaRichiesta(nomeUtente, tipo, StatoPrestito.IN_PRESTITO);
         notificaCambioStato();
         return strumentoTrovato;
 	}
@@ -84,6 +88,7 @@ public class MonitorLaboratorio {
     public synchronized void restituisciStrumento(Strumento strumento, String nomeUtente) {
     	strumento.setStato(StatoStrumento.DISPONIBILE);
         registraEvento(nomeUtente + " restituisce " + strumento.getId());
+        aggiornaOCreaRichiesta(nomeUtente, strumento.getTipo(), StatoPrestito.RESTITUITO);
         notificaCambioStato();
         // La restituzione deve rendere possibile il progresso delle richieste in attesa
         notifyAll(); 
@@ -97,6 +102,10 @@ public class MonitorLaboratorio {
         return List.copyOf(registroEventi); 
     }
     
+    
+    public synchronized List<InfoRichiesta> getListaRichieste() {
+        return List.copyOf(listaRichieste); 
+    }
     /**
      * @author Lorenzo Manna
      * @param strumento
@@ -135,5 +144,22 @@ public class MonitorLaboratorio {
 	public Catalogo getCatalogo() {
 		return catalogo;
 	}
+	/**
+	 * @author Lorenzo Manna
+	 * @param utente
+	 * @param tipo
+	 * @param stato
+	 */
+	private void aggiornaOCreaRichiesta(String utente, TipoStrumento tipo, StatoPrestito stato) {
+        for (InfoRichiesta r : listaRichieste) {
+            if (r.getNomeUtente().equals(utente)) {
+                r.setStato(stato);
+                return;
+            }
+        }
+        InfoRichiesta nuova = new InfoRichiesta(utente, tipo, stato);
+        listaRichieste.add(nuova);
+    }
+	
     
 }

@@ -22,9 +22,15 @@ import javax.swing.border.LineBorder;
 import javax.swing.table.DefaultTableModel;
 
 import it.unibs.eps.labmanager.concurrency.MonitorLaboratorio;
-import it.unibs.eps.labmanager.model.Catalogo;
+import it.unibs.eps.labmanager.model.EventLog;
+import it.unibs.eps.labmanager.model.InfoRichiesta;
+import it.unibs.eps.labmanager.model.StatoPrestito;
 import it.unibs.eps.labmanager.model.Strumento;
 import it.unibs.eps.labmanager.simulation.GestoreSimulazione;
+
+/**
+ * @author Lorenzo Manna
+ */
 
 public class MainFrame extends JFrame {
 
@@ -33,7 +39,6 @@ public class MainFrame extends JFrame {
 	
 	private GestoreSimulazione gestoreSimulazione;
 	private MonitorLaboratorio monitor;
-	private Catalogo catalogo;
 	
 	// Palette colori
 	private Color colorBg = new Color(244, 245, 247);         
@@ -81,6 +86,10 @@ public class MainFrame extends JFrame {
 	
 	public void aggiornaGUI() {
 		aggiornaTabStrumenti();
+		aggiornaTabRegistro();
+		aggiornaUpperPanel();
+		aggiornaTabRichieste();
+		
 		// In futuro: aggiornaTabRichieste(), aggiornaTabRegistro(), aggiornaUpperPanel()
 	}
 	
@@ -96,6 +105,49 @@ public class MainFrame extends JFrame {
 				s.getStato()
 			});
 		}
+	}
+	
+	public void aggiornaTabRegistro() {
+		
+		if (monitor == null || modelRegistroEventi == null) return;
+			
+		modelRegistroEventi.setRowCount(0); // Svuota la tabella prima del ripopolamento
+			
+		for (EventLog event : monitor.getRegistroEventi()) {
+			
+			modelRegistroEventi.addRow(new Object[]{
+					event.getOrarioFormattato(),
+					event.getDescrizione()
+			});
+		}
+	}
+	
+	public void aggiornaTabRichieste() {
+		
+		
+		if (monitor == null || modelRichieste == null) return;
+		
+		modelRichieste.setRowCount(0); // Svuota la tabella prima del ripopolamento
+			
+		for (InfoRichiesta richiesta : monitor.getListaRichieste()) {
+			
+			modelRichieste.addRow(new Object[]{
+					richiesta.getNomeUtente(),
+					richiesta.getTipoStrumento(),
+					richiesta.getStato().getNomeDescrittivo()
+			});
+		}
+	}
+	
+	public void aggiornaUpperPanel() {
+	    int numeroStrumentiDisponibili = monitor.getCatalogo().getStrumentiDisponibili().size();
+	    int numeroStrumentiInPrestito = monitor.getCatalogo().getStrumentiInPrestito().size();
+	    long utentiInAttesa = monitor.getListaRichieste().stream()
+	            .filter(r -> r.getStato() == StatoPrestito.IN_ATTESA)
+	            .count();
+		lblValoreDisponibili.setText(Integer.toString(numeroStrumentiDisponibili));
+		lblValorePrestito.setText(Integer.toString(numeroStrumentiInPrestito));
+	    lblValoreAttesa.setText(Long.toString(utentiInAttesa));
 	}
 	
 	private void setBtnListeners() {
