@@ -1,7 +1,6 @@
 package it.unibs.eps.labmanager.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,7 +24,16 @@ public class Catalogo {
 		else
 			strumenti.add(strumento);
 	}
-	
+	public void rimuoviStrumento(Strumento strumento) {
+		
+		if(!strumenti.contains(strumento))
+			throw new IllegalArgumentException("Lo strumento selezionato non esiste.");
+		else if(strumento == null)
+			throw new IllegalArgumentException("Lo strumento selezionato non puo' essere nullo");
+		else
+			strumenti.remove(strumento);
+		
+	}
 	
 	/**
 	 * @param tipo 	il tipo di strumento richiesto

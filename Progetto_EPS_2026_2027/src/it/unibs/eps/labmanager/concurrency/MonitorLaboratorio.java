@@ -120,6 +120,15 @@ public class MonitorLaboratorio {
         // Aggiorna l'interfaccia grafica
         notificaCambioStato();
     }
+    
+    public synchronized void rimuoviStrumento(Strumento strumento) {
+    	if (strumento.getStato() == StatoStrumento.IN_PRESTITO) {
+            throw new IllegalStateException("Impossibile rimuovere lo strumento " + strumento.getId() + ": è attualmente in prestito!");
+        }
+    	catalogo.rimuoviStrumento(strumento);
+    	registraEvento("Strumento rimosso: " + strumento.getId() + " (" + strumento.getTipo() + ")");
+    	notificaCambioStato();
+    }
     /**
      * @author Lorenzo Manna
      * @param listener

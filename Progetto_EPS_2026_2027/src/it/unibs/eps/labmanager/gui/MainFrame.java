@@ -64,6 +64,7 @@ public class MainFrame extends JFrame {
 	private JButton btnInterrompi;
 	private JButton btnAvvioSimulazione;
 	private JButton btnAggiungiStrumento;
+	private JButton btnRimuoviStrumento;
 	
 	// Etichette dell'UpperPanel
 	private JLabel lblValoreDisponibili;
@@ -71,9 +72,11 @@ public class MainFrame extends JFrame {
 	private JLabel lblValoreAttesa;
 	
 	private FrameCreaStrumento frameCreaStrumento;
+	private FrameRimuoviStrumento frameRimuoviStrumento;
 	
 	public MainFrame(MonitorLaboratorio monitor, GestoreSimulazione gestoreSimulazione) {
 		this.frameCreaStrumento = new FrameCreaStrumento((strumento) -> monitor.aggiungiStrumento(strumento));
+		this.frameRimuoviStrumento = new FrameRimuoviStrumento((strumento) -> monitor.rimuoviStrumento(strumento));
 		this.monitor = monitor;
 		this.gestoreSimulazione = gestoreSimulazione;
 		
@@ -146,6 +149,8 @@ public class MainFrame extends JFrame {
 		btnAvvioSimulazione.addActionListener(e -> gestoreSimulazione.avviaSim());
 		btnInterrompi.addActionListener(e -> gestoreSimulazione.interrompiSimulazione());
 		btnAggiungiStrumento.addActionListener(e -> frameCreaStrumento.setVisible(true));
+		btnRimuoviStrumento.addActionListener(e -> {frameRimuoviStrumento.aggiornaListaStrumenti(monitor.getCatalogo().getTuttiStrumenti());
+												    frameRimuoviStrumento.setVisible(true);});
 	}
 	
 	private void InitUI() {
@@ -393,6 +398,12 @@ public class MainFrame extends JFrame {
 		btnAggiungiStrumento.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		btnAggiungiStrumento.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		panelGestioneDati.add(btnAggiungiStrumento);
+		
+		btnRimuoviStrumento = new JButton("Rimuovi Strumento");
+		btnRimuoviStrumento.setPreferredSize(new Dimension(160, 28));
+		btnRimuoviStrumento.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+		btnRimuoviStrumento.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+		panelGestioneDati.add(btnRimuoviStrumento);
 		
 		return panelGestioneDati;
 	}
