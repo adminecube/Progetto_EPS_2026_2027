@@ -145,14 +145,22 @@ public class MonitorLaboratorio {
             javax.swing.SwingUtilities.invokeLater(() -> listener.statoCambiato());
         }
     }
-    /**
-     * @author Simone Biagi
-     * @return
-     */
+    
 
-	public Catalogo getCatalogo() {
-		return catalogo;
-	}
+    public synchronized List<Strumento> getStrumentiSnapshot() {
+        return catalogo.getTuttiStrumenti(); 
+    }
+
+    public synchronized List<Strumento> getStrumentiInPrestito(){
+    	return catalogo.getStrumentiInPrestito();
+    }
+    public synchronized int getNumeroDisponibili() {
+        return catalogo.getStrumentiDisponibili().size();
+    }
+
+    public synchronized int getNumeroInPrestito() {
+        return catalogo.getStrumentiInPrestito().size();
+    }
 	/**
 	 * @author Lorenzo Manna
 	 * @param utente
@@ -170,5 +178,23 @@ public class MonitorLaboratorio {
         listaRichieste.add(nuova);
     }
 	
+	public synchronized void setRegistroEventi(List<EventLog> registroEventi) {
+		
+		this.registroEventi.clear();
+		
+		for(EventLog evento : registroEventi) {
+			this.registroEventi.add(evento);
+		}
+		notificaCambioStato();
+	}
+	
+	public synchronized void setCatalogo(Catalogo catalogo) {
+		
+		this.catalogo.clear();
+		for(Strumento strumento : catalogo.getTuttiStrumenti()) {
+			this.catalogo.aggiungiStrumento(strumento);
+		}
+		notificaCambioStato();
+	}
     
 }
