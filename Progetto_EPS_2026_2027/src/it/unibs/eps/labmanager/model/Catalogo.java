@@ -17,19 +17,19 @@ public class Catalogo {
 	}
 	//metodi 
 	public void aggiungiStrumento(Strumento strumento){
-		if(strumenti.contains(strumento))
-			throw new IllegalArgumentException("Lo strumento con codice " + strumento.getId() + "e' gia presente");
-		else if(strumento == null)
+		if(strumento == null)
 			throw new IllegalArgumentException("Lo strumento non puo' essere nullo");
+		else if(strumenti.contains(strumento))
+			throw new IllegalArgumentException("Lo strumento con codice " + strumento.getId() + "e' gia presente");
 		else
 			strumenti.add(strumento);
 	}
 	public void rimuoviStrumento(Strumento strumento) {
 		
-		if(!strumenti.contains(strumento))
-			throw new IllegalArgumentException("Lo strumento selezionato non esiste.");
-		else if(strumento == null)
+		if(strumento == null)
 			throw new IllegalArgumentException("Lo strumento selezionato non puo' essere nullo");
+		else if(!strumenti.contains(strumento))
+			throw new IllegalArgumentException("Lo strumento selezionato non esiste.");
 		else
 			strumenti.remove(strumento);
 		
@@ -62,6 +62,11 @@ public class Catalogo {
 				.filter(s->s.getStato() == StatoStrumento.IN_PRESTITO)
 				.collect(Collectors.toList());
 	}
+	
+	public void clear() {
+		strumenti.clear();
+	}
+	
 	@Override
 	public String toString() {
 	    if (strumenti.isEmpty()) {
