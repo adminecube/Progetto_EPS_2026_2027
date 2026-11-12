@@ -9,10 +9,13 @@ import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
+
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
@@ -29,6 +32,8 @@ import it.unibs.eps.labmanager.model.EventLog;
 import it.unibs.eps.labmanager.model.InfoRichiesta;
 import it.unibs.eps.labmanager.model.StatoPrestito;
 import it.unibs.eps.labmanager.model.Strumento;
+import it.unibs.eps.labmanager.persistence.GestoreCatalogoFile;
+import it.unibs.eps.labmanager.persistence.GestoreStoricoFile;
 import it.unibs.eps.labmanager.simulation.GestoreSimulazione;
 
 /**
@@ -65,11 +70,14 @@ public class MainFrame extends JFrame {
 	private JButton btnAvvioSimulazione;
 	private JButton btnAggiungiStrumento;
 	private JButton btnRimuoviStrumento;
+	private JButton loadButton;
+	private JButton saveButton;
 	
 	// Etichette dell'UpperPanel
 	private JLabel lblValoreDisponibili;
 	private JLabel lblValorePrestito;
 	private JLabel lblValoreAttesa;
+	private JLabel lblStatoSimulazione;
 	
 	private FrameCreaStrumento frameCreaStrumento;
 	private FrameRimuoviStrumento frameRimuoviStrumento;
@@ -143,14 +151,45 @@ public class MainFrame extends JFrame {
 		lblValoreDisponibili.setText(Integer.toString(numeroStrumentiDisponibili));
 		lblValorePrestito.setText(Integer.toString(numeroStrumentiInPrestito));
 		lblValoreAttesa.setText(Long.toString(utentiInAttesa));
+		
+		String stato = gestoreSimulazione.isRunning() ? "ON" : "OFF";
+		
+		lblStatoSimulazione.setText(stato);
 	}
 	
 	private void setBtnListeners() {
 		btnAvvioSimulazione.addActionListener(e -> gestoreSimulazione.avviaSim());
-		btnInterrompi.addActionListener(e -> gestoreSimulazione.interrompiSimulazione());
+		btnInterrompi.addActionListener(e -> {gestoreSimulazione.interrompiSimulazione();
+											  aggiornaGUI();
+											  });
 		btnAggiungiStrumento.addActionListener(e -> frameCreaStrumento.setVisible(true));
 		btnRimuoviStrumento.addActionListener(e -> {frameRimuoviStrumento.aggiornaListaStrumenti(monitor.getTuttiStrumenti());
 												    frameRimuoviStrumento.setVisible(true);});
+		saveButton.addActionListener(e -> {
+											if(!gestoreSimulazione.isRunning()) {
+												try{
+													GestoreCatalogoFile.salvaCatalogo(monitor.getTuttiStrumenti());
+													GestoreStoricoFile.salvaStorico(monitor.getRegistroEventi());
+													JOptionPane.showMessageDialog(this, "Operazione completata con successo", "", JOptionPane.INFORMATION_MESSAGE);
+												}catch(IOException ex) {
+													JOptionPane.showMessageDialog(this, ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
+												}
+											}else
+												JOptionPane.showMessageDialog(this, "Impossibile svolgere operazioni di caricamento a simulazione avviata!", "Errore", JOptionPane.ERROR_MESSAGE);
+										});
+		loadButton.addActionListener(e -> { 
+											if(!gestoreSimulazione.isRunning()) {
+												try {
+													monitor.setCatalogo(GestoreCatalogoFile.caricaCatalogo());
+													monitor.setRegistroEventi(GestoreStoricoFile.caricaStorico());
+													JOptionPane.showMessageDialog(this, "Operazione completata con successo", "", JOptionPane.INFORMATION_MESSAGE);
+												} catch (IOException ex) {
+													JOptionPane.showMessageDialog(this, ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);	
+														
+												}
+											}else
+												JOptionPane.showMessageDialog(this, "Impossibile svolgere operazioni di caricamento a simulazione avviata!", "Errore", JOptionPane.ERROR_MESSAGE);
+										});
 	}
 	
 	private void InitUI() {
@@ -348,10 +387,19 @@ public class MainFrame extends JFrame {
 		lblSimulazione.setForeground(colorTextDark);
 		panelSimulazione.add(lblSimulazione);
 		
-		JLabel lblStatoMonitor = new JLabel("Stato Monitor: Attivo");
-		lblStatoMonitor.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-		lblStatoMonitor.setForeground(new Color(100, 116, 139));
-		panelSimulazione.add(lblStatoMonitor);
+		JPanel panel = new JPanel();
+		panel.setBackground(colorBg);
+		panelSimulazione.add(panel);
+		
+		JLabel lblStatoSimulazione_1 = new JLabel("Stato Simulazione: ");
+		lblStatoSimulazione_1.setForeground(new Color(100, 116, 139));
+		lblStatoSimulazione_1.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+		panel.add(lblStatoSimulazione_1);
+		
+		lblStatoSimulazione = new JLabel("");
+		lblStatoSimulazione.setForeground(new Color(100, 116, 139));
+		lblStatoSimulazione.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+		panel.add(lblStatoSimulazione);
 		
 		btnAvvioSimulazione = new JButton("Avvia simulazione");
 		btnAvvioSimulazione.setFont(new Font("Segoe UI", Font.BOLD, 12));
@@ -377,13 +425,13 @@ public class MainFrame extends JFrame {
 		));
 		panelGestioneDati.setLayout(new FlowLayout(FlowLayout.LEFT, 8, 2));
 		
-		JButton saveButton = new JButton("Salva dati");
+		saveButton = new JButton("Salva dati");
 		saveButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		saveButton.setPreferredSize(new Dimension(100, 28));
 		saveButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
 		panelGestioneDati.add(saveButton);
 		
-		JButton loadButton = new JButton("Carica dati");
+		loadButton = new JButton("Carica dati");
 		loadButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		loadButton.setPreferredSize(new Dimension(100, 28));
 		loadButton.setCursor(new Cursor(Cursor.HAND_CURSOR));

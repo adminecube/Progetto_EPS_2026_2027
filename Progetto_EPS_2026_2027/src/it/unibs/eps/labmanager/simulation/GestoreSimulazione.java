@@ -29,10 +29,16 @@ public class GestoreSimulazione {
 			executor.execute(utente);
 		}
 		
+		executor.shutdown();
+		
 	}
 	public void interrompiSimulazione() {
 		// Invia un segnale di interrupt a tutti i thread in esecuzione o in attesa sul monitor	
-		if(executor != null && !executor.isShutdown())
+		if(executor != null && !executor.isTerminated())
 			executor.shutdownNow();
+	}
+	
+	public boolean isRunning() {
+		return executor != null && !executor.isTerminated();
 	}
 }

@@ -22,16 +22,19 @@ import it.unibs.eps.labmanager.model.EventLog;
  * ai file all'interno di blocchi sincronizzati o durante l'occupazione del monitor.
  */
 public class GestoreStoricoFile {
-	// Definisce il nome del file su cui verrà salvato lo storico
+	// Definisce il nome del file su cui verrï¿½ salvato lo storico
 	private static final String FILE_STORICO = "storico_eventi.txt";
 	
+	private GestoreStoricoFile() {
+		super();
+	}
 	/**
      * Salva l'intera lista di eventi presenti nello storico all'interno del file di testo.
      * Ciascun evento viene formattato come stringa nella forma "HH:mm:ss|Descrizione".
      *
      * @param storico La lista di oggetti {@link EventLog} da rendere persistenti su disco.
      */
-	public void salvaStorico(List<EventLog> storico) {
+	public static void salvaStorico(List<EventLog> storico) {
 		// Apre il file in scrittura tramite BufferedWriter con try-with-resources per auto-chiusura
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_STORICO))){
     		for(EventLog log : storico) {
@@ -53,7 +56,7 @@ public class GestoreStoricoFile {
      * @return Una lista di oggetti {@link EventLog} popolata con i dati letti da file; 
      *         restituisce una lista vuota in caso di primo avvio o file non trovato.
      */
-    public List<EventLog> caricaStorico() {
+    public static List<EventLog> caricaStorico() {
     	List<EventLog> storicoCaricato = new ArrayList<>();
     	
     	// Usa un blocco try-with-resources per aprire in lettura il file in modo sicuro (BufferedReader)
@@ -61,7 +64,7 @@ public class GestoreStoricoFile {
         	// Dichiara una variabile per memorizzare temporaneamente ogni riga letta
         	String linea;
         	
-        	// Continua a leggere riga per riga finché non si raggiunge la fine del file (reader.readLine() restituisce null)
+        	// Continua a leggere riga per riga finchï¿½ non si raggiunge la fine del file (reader.readLine() restituisce null)
         	while ((linea = reader.readLine()) != null) {
         		// Divide la riga in un array di stringhe usando il punto e virgola come separatore
         		String[] parti = linea.split("\\|",2);
@@ -78,13 +81,13 @@ public class GestoreStoricoFile {
         	}
         	
         } catch (FileNotFoundException e) {
-        	System.out.println("Nessun registro precedente trovato (primo avvio). Il registro partirà vuoto.");
+        	System.out.println("Nessun registro precedente trovato (primo avvio). Il registro partirï¿½ vuoto.");
 		} catch (IOException e) {
 			System.err.println("Errore di I/O durante la lettura dello storico: " + e.getMessage());
 		} catch (DateTimeParseException e) {
 			System.err.println("Errore nella formattazione dei dati nel file del registro.");
 		}
-        // Restituisce la lista (che sarà piena se il file c'era, o vuota se c'è stato un problema/primo avvio)
+        // Restituisce la lista (che sarï¿½ piena se il file c'era, o vuota se c'ï¿½ stato un problema/primo avvio)
         return storicoCaricato;
     }
 	

@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 import it.unibs.eps.labmanager.model.Catalogo;
 import it.unibs.eps.labmanager.model.StatoStrumento;
@@ -17,73 +18,65 @@ import it.unibs.eps.labmanager.model.TipoStrumento;
  */
 
 public class GestoreCatalogoFile {
-	// Definisce il nome del file su cui verrà salvato il catalogo
+	// Definisce il nome del file su cui verrï¿½ salvato il catalogo
 	private static final String FILE_CATALOGO = "catalogo_strumenti.txt";
     
+	private GestoreCatalogoFile() {
+		super();
+	}
     /**
      * Salva la lista degli strumenti fornita su file.
-     * Deve essere chiamato passando una copia dei dati e MAI mentre il monitor è bloccato.
+     * Deve essere chiamato passando una copia dei dati e MAI mentre il monitor ï¿½ bloccato.
      * 
      * @param strumenti
      */
-    public void salvaCatalogo(Catalogo catalogo) {
-    	if (catalogo == null) {
-            System.err.println("Impossibile salvare un catalogo nullo.");
-            return;
+	public static void salvaCatalogo(Catalogo catalogo) throws IOException {
+        if (catalogo == null) {
+            throw new IllegalArgumentException("Impossibile salvare un catalogo nullo.");
         }
-    	// Usa un blocco try-with-resources per garantire la chiusura automatica del file (BufferedWriter)
-    	try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_CATALOGO))){
-    		for(Strumento s:catalogo.getTuttiStrumenti()) {
-    			// Formatta i dati dello strumento separandoli con un punto e virgola (ID;TIPO;STATO)
-    			String linea = s.getId()+";"+s.getTipo()+";"+s.getStato();
-    			writer.write(linea);
-    			writer.newLine();
-    		}
-    	}catch(IOException e) {
-    		System.err.println("Errore durante il salvataggio del catalogo: " + e.getMessage());
-    	}
+        salvaCatalogo(catalogo.getTuttiStrumenti());
     }
-    
+
+    public static void salvaCatalogo(List<Strumento> listaStrumenti) throws IOException {
+        if (listaStrumenti == null) {
+            throw new IllegalArgumentException("Lista strumenti nulla.");
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_CATALOGO))) {
+            for (Strumento s : listaStrumenti) {
+                String linea = s.getId() + ";" + s.getTipo() + ";" + s.getStato();
+                writer.write(linea);
+                writer.newLine();
+            }
+        }
+    }
+
     /**
      * Carica gli strumenti dal file e restituisce una lista.
      * 
-     * @return Una lista di Strumento caricata dal file, o una lista vuota se il file non esiste/è vuoto.
+     * @return Una lista di Strumento caricata dal file, o una lista vuota se il file non esiste/ï¿½ vuoto.
      */
-    public Catalogo caricaCatalogo() {
-    	Catalogo catalogo = new Catalogo();
-    	
-    	// Usa un blocco try-with-resources per aprire in lettura il file in modo sicuro (BufferedReader)
+    
+    public static Catalogo caricaCatalogo() throws IOException {
+        Catalogo catalogo = new Catalogo();
+
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_CATALOGO))) {
-        	// Dichiara una variabile per memorizzare temporaneamente ogni riga letta
-        	String linea;
-        	
-        	// Continua a leggere riga per riga finché non si raggiunge la fine del file (reader.readLine() restituisce null)
-        	while ((linea = reader.readLine()) != null) {
-        		// Divide la riga in un array di stringhe usando il punto e virgola come separatore
-        		String[] parti = linea.split(";");
-        		
-        		// Verifica che la riga sia ben formattata e contenga esattamente 3 elementi (ID, Tipo, Stato)
-        		if(parti.length==3) {
-        			String id = parti[0];
-        			TipoStrumento tipo = TipoStrumento.valueOf(parti[1]);
-        			StatoStrumento stato = StatoStrumento.valueOf(parti[2]);
-        			
-        			//Creo un nuovo oggetto strumento con le caratteristiche rilevate
-        			Strumento strumento = new Strumento(id,tipo);
-        			strumento.setStato(stato);
-        			//lo aggiungo alla lista strumenti caricati
-        			catalogo.aggiungiStrumento(strumento);
-        		}
-        	}
-        	
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] parti = linea.split(";");
+                if (parti.length == 3) {
+                    String id = parti[0];
+                    TipoStrumento tipo = TipoStrumento.valueOf(parti[1]);
+                    
+                    // Vedi nota sotto sullo stato al caricamento
+                    Strumento strumento = new Strumento(id, tipo);
+                    strumento.setStato(StatoStrumento.DISPONIBILE);
+                    catalogo.aggiungiStrumento(strumento);
+                }
+            }
         } catch (FileNotFoundException e) {
-        	System.out.println("Nessun catalogo precedente trovato (primo avvio). Il catalogo partirà vuoto.");
-		} catch (IOException e) {
-			System.err.println("Errore di I/O durante la lettura del catalogo: " + e.getMessage());
-		} catch (IllegalArgumentException e) {
-			System.err.println("Errore nella formattazione dei dati nel file del catalogo.");
-		}
-        // Restituisce la lista (che sarà piena se il file c'era, o vuota se c'è stato un problema/primo avvio)
+            // Al primo avvio il file puÃ² non esistere: si restituisce un catalogo vuoto
+            return catalogo;
+        }
         return catalogo;
     }
     
