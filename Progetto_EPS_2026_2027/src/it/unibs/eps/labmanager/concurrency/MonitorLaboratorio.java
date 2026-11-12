@@ -147,7 +147,7 @@ public class MonitorLaboratorio {
     }
     
 
-    public synchronized List<Strumento> getStrumentiSnapshot() {
+    public synchronized List<Strumento> getTuttiStrumenti() {
         return catalogo.getTuttiStrumenti(); 
     }
 

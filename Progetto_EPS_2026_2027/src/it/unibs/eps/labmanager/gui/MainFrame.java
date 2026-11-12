@@ -98,7 +98,7 @@ public class MainFrame extends JFrame {
 		if (monitor == null || modelStrumenti == null) return;
 		modelStrumenti.setRowCount(0);
 		
-		for (Strumento s : monitor.getCatalogo().getTuttiStrumenti()) {
+		for (Strumento s : monitor.getTuttiStrumenti()) {
 			modelStrumenti.addRow(new Object[]{
 				s.getTipo(),
 				s.getId(),
@@ -134,8 +134,8 @@ public class MainFrame extends JFrame {
 	
 	public void aggiornaUpperPanel() {
 		if (monitor == null) return;
-		int numeroStrumentiDisponibili = monitor.getCatalogo().getStrumentiDisponibili().size();
-		int numeroStrumentiInPrestito = monitor.getCatalogo().getStrumentiInPrestito().size();
+		int numeroStrumentiDisponibili = monitor.getNumeroDisponibili();
+		int numeroStrumentiInPrestito = monitor.getNumeroInPrestito();
 		long utentiInAttesa = monitor.getListaRichieste().stream()
 				.filter(r -> r.getStato() == StatoPrestito.IN_ATTESA)
 				.count();
@@ -149,7 +149,7 @@ public class MainFrame extends JFrame {
 		btnAvvioSimulazione.addActionListener(e -> gestoreSimulazione.avviaSim());
 		btnInterrompi.addActionListener(e -> gestoreSimulazione.interrompiSimulazione());
 		btnAggiungiStrumento.addActionListener(e -> frameCreaStrumento.setVisible(true));
-		btnRimuoviStrumento.addActionListener(e -> {frameRimuoviStrumento.aggiornaListaStrumenti(monitor.getCatalogo().getTuttiStrumenti());
+		btnRimuoviStrumento.addActionListener(e -> {frameRimuoviStrumento.aggiornaListaStrumenti(monitor.getTuttiStrumenti());
 												    frameRimuoviStrumento.setVisible(true);});
 	}
 	
