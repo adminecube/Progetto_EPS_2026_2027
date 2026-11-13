@@ -2,13 +2,9 @@ package it.unibs.eps.labmanager.model;
 
 public class InfoRichiesta {
 	
-	private String nomeUtente;
+	private final String nomeUtente;
 	private StatoPrestito stato;
-	private TipoStrumento strumento;
-	
-	public InfoRichiesta() {
-		
-	}
+	private final TipoStrumento strumento;
 	
 	public InfoRichiesta(String nomeUtente, TipoStrumento tipoStrumento, StatoPrestito stato) {
         this.nomeUtente = nomeUtente;
