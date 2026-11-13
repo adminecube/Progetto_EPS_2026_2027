@@ -435,10 +435,7 @@ public class MainFrame extends JFrame {
 		loadButton.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 		loadButton.setPreferredSize(new Dimension(100, 28));
 		loadButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-		loadButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-			}
-		});
+		
 		panelGestioneDati.add(loadButton);
 		
 		btnAggiungiStrumento = new JButton("Aggiungi Strumento");
