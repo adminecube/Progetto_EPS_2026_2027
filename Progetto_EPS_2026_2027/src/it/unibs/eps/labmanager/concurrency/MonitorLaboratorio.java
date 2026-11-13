@@ -35,7 +35,6 @@ public class MonitorLaboratorio {
 	 * @param nomeUtente
 	 * @return
 	 * @author Simone Biagi
-	 * @author Lorenzo Manna
 	 */
 	public synchronized Strumento richiediStrumento(TipoStrumento tipo,String nomeUtente) {
 		Strumento strumentoTrovato = catalogo.trovaStrumentoDisponibile(tipo);
@@ -83,7 +82,6 @@ public class MonitorLaboratorio {
 	 * @param strumento
 	 * @param nomeUtente
 	 * @author Simone Biagi
-	 * @author Lorenzo Manna
 	 */
     public synchronized void restituisciStrumento(Strumento strumento, String nomeUtente) {
     	strumento.setStato(StatoStrumento.DISPONIBILE);
@@ -120,7 +118,10 @@ public class MonitorLaboratorio {
         // Aggiorna l'interfaccia grafica
         notificaCambioStato();
     }
-    
+    /**
+     * @author Lorenzo Manna
+     * @param strumento
+     */
     public synchronized void rimuoviStrumento(Strumento strumento) {
     	if (strumento.getStato() == StatoStrumento.IN_PRESTITO) {
             throw new IllegalStateException("Impossibile rimuovere lo strumento " + strumento.getId() + ": è attualmente in prestito!");
@@ -147,17 +148,33 @@ public class MonitorLaboratorio {
     }
     
 
+    /**
+     * @author Simone Biagi
+     * @return
+     */
     public synchronized List<Strumento> getTuttiStrumenti() {
         return catalogo.getTuttiStrumenti(); 
     }
-
+    
+    /**
+     * @author Simone Biagi
+     * @return
+     */
     public synchronized List<Strumento> getStrumentiInPrestito(){
     	return catalogo.getStrumentiInPrestito();
     }
+    /**
+     * @author Simone Biagi
+     * @return
+     */
     public synchronized int getNumeroDisponibili() {
         return catalogo.getStrumentiDisponibili().size();
     }
 
+    /**
+     * @author Simone Biagi
+     * @return
+     */
     public synchronized int getNumeroInPrestito() {
         return catalogo.getStrumentiInPrestito().size();
     }
@@ -178,6 +195,11 @@ public class MonitorLaboratorio {
         listaRichieste.add(nuova);
     }
 	
+	/**
+	 * @author Lorenzo Manna
+	 * @param registroEventi
+	 */
+	
 	public synchronized void setRegistroEventi(List<EventLog> registroEventi) {
 		
 		this.registroEventi.clear();
@@ -188,6 +210,10 @@ public class MonitorLaboratorio {
 		notificaCambioStato();
 	}
 	
+	/**
+	 * @author Lorenzo Manna
+	 * @param catalogo
+	 */
 	public synchronized void setCatalogo(Catalogo catalogo) {
 		
 		this.catalogo.clear();

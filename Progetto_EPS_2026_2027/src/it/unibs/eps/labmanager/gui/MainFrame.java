@@ -175,7 +175,7 @@ public class MainFrame extends JFrame {
 													JOptionPane.showMessageDialog(this, ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
 												}
 											}else
-												JOptionPane.showMessageDialog(this, "Impossibile svolgere operazioni di caricamento a simulazione avviata!", "Errore", JOptionPane.ERROR_MESSAGE);
+												JOptionPane.showMessageDialog(this, "Impossibile svolgere operazioni di salvataggio a simulazione avviata!", "Errore", JOptionPane.ERROR_MESSAGE);
 										});
 		loadButton.addActionListener(e -> { 
 											if(!gestoreSimulazione.isRunning()) {

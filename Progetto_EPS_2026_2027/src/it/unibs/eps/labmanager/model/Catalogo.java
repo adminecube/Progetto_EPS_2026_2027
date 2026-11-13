@@ -11,6 +11,7 @@ import java.util.stream.Collectors;
  */
 public class Catalogo {
 	private final List<Strumento> strumenti;
+	private static final int MAX_STRUMENTI = 5;
 	
 	public Catalogo() {
 		this.strumenti=new ArrayList<>();
@@ -20,7 +21,9 @@ public class Catalogo {
 		if(strumento == null)
 			throw new IllegalArgumentException("Lo strumento non puo' essere nullo");
 		else if(strumenti.contains(strumento))
-			throw new IllegalArgumentException("Lo strumento con codice " + strumento.getId() + "e' gia presente");
+			throw new IllegalArgumentException("Lo strumento con codice " + strumento.getId() + " e' gia presente");
+		else if(strumenti.size() >= MAX_STRUMENTI)
+			throw new IllegalArgumentException("Impossibile aggiungere più di 5 strumenti");
 		else
 			strumenti.add(strumento);
 	}
