@@ -38,6 +38,13 @@ public class MonitorLaboratorio {
 	 */
 	public synchronized Strumento richiediStrumento(TipoStrumento tipo,String nomeUtente) {
 		Strumento strumentoTrovato = catalogo.trovaStrumentoDisponibile(tipo);
+		//se lo strumento non esiste la richiesta viene rifiutata
+		if (!catalogo.esisteTipoStrumento(tipo)) {
+	        registraEvento("Richiesta rifiutata per " + nomeUtente + ": nessun " + tipo + " in catalogo");
+	        aggiornaOCreaRichiesta(nomeUtente, tipo, StatoPrestito.RIFIUTATO);
+	        notificaCambioStato();
+	        return null;
+	    }
 		
 		// Se lo strumento non � subito disponibile, si registra l'attesa una sola volta
 		if(strumentoTrovato==null) {

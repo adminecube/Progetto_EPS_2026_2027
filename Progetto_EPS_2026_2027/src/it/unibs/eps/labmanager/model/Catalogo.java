@@ -60,6 +60,12 @@ public class Catalogo {
 				.collect(Collectors.toList());
 	}
 	
+	public boolean esisteTipoStrumento(TipoStrumento tipo) {
+	    if (tipo == null) return false;
+	    return strumenti.stream()
+	            .anyMatch(s -> s.getTipo() == tipo);
+	}
+	
 	public List<Strumento> getStrumentiInPrestito(){
 		return strumenti.stream()
 				.filter(s->s.getStato() == StatoStrumento.IN_PRESTITO)
