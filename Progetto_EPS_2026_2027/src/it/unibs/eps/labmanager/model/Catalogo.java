@@ -88,6 +88,4 @@ public class Catalogo {
 	    }
 	    return sb.toString().trim();
 	}
-	
-	
 }

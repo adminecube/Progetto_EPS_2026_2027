@@ -14,6 +14,7 @@ import it.unibs.eps.labmanager.model.TipoStrumento;
  * 2. Utilizza lo strumento per un tempo casuale (simulando la durata del prestito tramite sleep).
  * 3. Restituisce in modo sicuro lo strumento, anche in caso di interruzioni impreviste.
  * </p>
+ * @author Simone Biagi
  */
 public class UserThread implements Runnable{
 	

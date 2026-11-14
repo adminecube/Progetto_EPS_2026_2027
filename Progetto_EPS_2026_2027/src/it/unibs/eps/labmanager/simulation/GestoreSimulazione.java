@@ -14,6 +14,7 @@ import it.unibs.eps.labmanager.model.TipoStrumento;
  * Consente di avviare la simulazione e di interromperla forzatamente inviando segnali 
  * di interrupt ai thread in esecuzione o in attesa.
  * </p>
+ * @author Simone Biagi
  */
 public class GestoreSimulazione {
 	private final MonitorLaboratorio monitor;

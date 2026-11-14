@@ -3,7 +3,7 @@ package it.unibs.eps.labmanager.model;
 /**
  * Contiene i dettagli e le informazioni di base relative a una richiesta di prestito
  * effettuata da un utente nel sistema gestionale.
- * @author Simone Biagi
+ * @author Lorenzo Manna
  */
 public class InfoRichiesta {
 	
