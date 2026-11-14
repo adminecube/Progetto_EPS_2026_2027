@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 /**
  *	Contenitore e gestore dell'insieme di strumenti fisici presenti nel laboratorio.
- * 	@author biagi
+ * 	@author Simone Biagi
  *
  */
 public class Catalogo {

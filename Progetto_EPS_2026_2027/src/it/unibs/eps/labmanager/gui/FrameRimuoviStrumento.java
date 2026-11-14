@@ -15,6 +15,14 @@ import javax.swing.JPanel;
 
 import it.unibs.eps.labmanager.model.Strumento;
 
+/**
+ * Finestra di dialogo dedicata alla rimozione di uno {@link Strumento} esistente 
+ * dal catalogo del laboratorio.
+ * <p>
+ * Mostra un menu a tendina contenente l'elenco aggiornato degli strumenti disponibili
+ * e delega l'effettiva logica di eliminazione a una callback passata dal frame principale.
+ * </p>
+ */
 public class FrameRimuoviStrumento extends JFrame {
 
 	private static final long serialVersionUID = 1L;
@@ -25,11 +33,17 @@ public class FrameRimuoviStrumento extends JFrame {
     private JButton btnSalva;
     private JButton btnAnnulla;
     
-
+    /**
+     * Costruisce la finestra per la rimozione di uno strumento.
+     *
+     * @param rimuoviStrumento Callback di tipo {@link Consumer} che viene invocata 
+     *                         quando l'utente conferma la rimozione. Riceve come parametro 
+     *                         lo {@link Strumento} selezionato da rimuovere.
+     */
     public FrameRimuoviStrumento(Consumer<Strumento> rimuoviStrumento) {
     	
     	listaStrumenti = new ArrayList<Strumento>();
-        setTitle("Aggiungi Strumento");
+        setTitle("Rimuovi Strumento"); // Modificato il titolo da "Aggiungi Strumento" a "Rimuovi Strumento"
         setSize(600, 200);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -49,9 +63,8 @@ public class FrameRimuoviStrumento extends JFrame {
 
         add(panel);
 
-        // Azione del tasto Salva
+        // Azione del tasto Rimuovi
         btnSalva.addActionListener(e -> {
-        	
         	 try {
         		 Strumento strumento = (Strumento) comboStrumenti.getSelectedItem();
              	 rimuoviStrumento.accept(strumento);
@@ -59,19 +72,26 @@ public class FrameRimuoviStrumento extends JFrame {
              } catch (Exception ex) {
                  JOptionPane.showMessageDialog(this, ex.getMessage(), "Errore", JOptionPane.ERROR_MESSAGE);
              }
-           
         });
 
         btnAnnulla.addActionListener(e -> setVisible(false));
     }
     
+    /**
+     * Aggiorna il contenuto del menu a tendina (JComboBox) con la lista più recente 
+     * degli strumenti presenti nel sistema.
+     * <p>
+     * Questo metodo deve essere chiamato prima di rendere visibile il frame per 
+     * garantire che i dati mostrati siano sincronizzati con lo stato del Monitor.
+     * </p>
+     *
+     * @param listaStrumenti La lista aggiornata di strumenti da mostrare.
+     */
     public void aggiornaListaStrumenti(List<Strumento> listaStrumenti) {
-    	
     	this.listaStrumenti = listaStrumenti;
         comboStrumenti.removeAllItems();
         for (Strumento s : listaStrumenti) {
             comboStrumenti.addItem(s);
         }
     }
-
 }

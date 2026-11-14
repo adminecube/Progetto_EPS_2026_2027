@@ -37,6 +37,15 @@ import it.unibs.eps.labmanager.persistence.GestoreStoricoFile;
 import it.unibs.eps.labmanager.simulation.GestoreSimulazione;
 
 /**
+ * Schermata principale dell'applicazione desktop del laboratorio didattico.
+ * <p>
+ * Centralizza tutte le operazioni a disposizione dell'utente: configurazione del catalogo, 
+ * avvio e interruzione della simulazione dei thread ({@link GestoreSimulazione}), e 
+ * salvataggio/caricamento dei dati. La classe si interfaccia in sicurezza con il 
+ * {@link MonitorLaboratorio}, aggiornando dinamicamente contatori e tabelle ogni volta 
+ * che lo stato delle risorse condivise cambia.
+ * </p>
+ * 
  * @author Lorenzo Manna
  */
 public class MainFrame extends JFrame {
@@ -82,6 +91,14 @@ public class MainFrame extends JFrame {
 	private FrameCreaStrumento frameCreaStrumento;
 	private FrameRimuoviStrumento frameRimuoviStrumento;
 	
+    /**
+     * Costruisce e inizializza l'interfaccia principale dell'applicazione.
+     * Collega inoltre la GUI al monitor in modo che quest'ultimo possa notificare 
+     * i cambiamenti di stato e scatenare il refresh della vista.
+     *
+     * @param monitor            Il {@link MonitorLaboratorio} che gestisce la concorrenza e lo stato.
+     * @param gestoreSimulazione L'oggetto che controlla l'avvio e l'interruzione dei thread simulati.
+     */
 	public MainFrame(MonitorLaboratorio monitor, GestoreSimulazione gestoreSimulazione) {
 		this.frameCreaStrumento = new FrameCreaStrumento((strumento) -> monitor.aggiungiStrumento(strumento));
 		this.frameRimuoviStrumento = new FrameRimuoviStrumento((strumento) -> monitor.rimuoviStrumento(strumento));
@@ -95,6 +112,11 @@ public class MainFrame extends JFrame {
 		aggiornaGUI();
 	}
 	
+    /**
+     * Aggiorna tutti i componenti visivi dell'interfaccia (tabelle e pannelli superiori)
+     * richiamando i dati più recenti dal monitor.
+     * Metodo tipicamente invocato dal thread dell'interfaccia (EDT) a seguito di un evento.
+     */
 	public void aggiornaGUI() {
 		aggiornaTabStrumenti();
 		aggiornaTabRegistro();
@@ -102,6 +124,10 @@ public class MainFrame extends JFrame {
 		aggiornaTabRichieste();
 	}
 	
+    /**
+     * Ricarica la tabella degli strumenti svuotandola e ripopolandola 
+     * con tutti gli strumenti presenti nel catalogo.
+     */
 	public void aggiornaTabStrumenti() {
 		if (monitor == null || modelStrumenti == null) return;
 		modelStrumenti.setRowCount(0);
@@ -115,6 +141,10 @@ public class MainFrame extends JFrame {
 		}
 	}
 	
+    /**
+     * Ricarica la tabella del registro eventi svuotandola e ripopolandola 
+     * con lo storico delle operazioni (prestiti, restituzioni, ecc.).
+     */
 	public void aggiornaTabRegistro() {
 		if (monitor == null || modelRegistroEventi == null) return;
 		modelRegistroEventi.setRowCount(0);
@@ -127,6 +157,10 @@ public class MainFrame extends JFrame {
 		}
 	}
 	
+    /**
+     * Ricarica la tabella delle richieste attive e passate svuotandola 
+     * e ripopolandola con l'elenco dello stato degli utenti (es. in attesa, in prestito).
+     */
 	public void aggiornaTabRichieste() {
 		if (monitor == null || modelRichieste == null) return;
 		modelRichieste.setRowCount(0);
@@ -140,6 +174,11 @@ public class MainFrame extends JFrame {
 		}
 	}
 	
+    /**
+     * Aggiorna i contatori numerici posti nella parte superiore della finestra 
+     * (strumenti disponibili, strumenti in prestito, utenti in attesa) e 
+     * l'etichetta dello stato della simulazione (ON/OFF).
+     */
 	public void aggiornaUpperPanel() {
 		if (monitor == null) return;
 		int numeroStrumentiDisponibili = monitor.getNumeroDisponibili();
@@ -157,6 +196,10 @@ public class MainFrame extends JFrame {
 		lblStatoSimulazione.setText(stato);
 	}
 	
+    /**
+     * Configura i listener per tutti i pulsanti dell'interfaccia, assegnando
+     * le rispettive logiche di gestione eventi (avvio simulazione, salvataggio file, apertura frame secondari).
+     */
 	private void setBtnListeners() {
 		btnAvvioSimulazione.addActionListener(e -> gestoreSimulazione.avviaSim());
 		btnInterrompi.addActionListener(e -> {gestoreSimulazione.interrompiSimulazione();
@@ -192,6 +235,10 @@ public class MainFrame extends JFrame {
 										});
 	}
 	
+    /**
+     * Inizializza l'interfaccia utente costruendo i pannelli e applicando 
+     * il LookAndFeel di sistema.
+     */
 	private void InitUI() {
 		try {
 		    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
@@ -536,6 +583,8 @@ public class MainFrame extends JFrame {
 	
 	/**
 	 * Applica uno stile moderno e pulito alle tabelle JTable dell'applicazione.
+	 *
+	 * @param table La tabella JTable a cui applicare il tema e le proporzioni grafiche.
 	 */
 	private void stilaTabella(JTable table) {
 		table.setFont(new Font("Segoe UI", Font.PLAIN, 12));

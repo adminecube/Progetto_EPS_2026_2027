@@ -6,19 +6,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Gestore thread-safe del catalogo strumenti e delle richieste degli utenti.
+ * <p>
+ * Questa classe centralizza la logica di prestito e restituzione per evitare conflitti 
+ * tra utenti che tentano di acquisire la stessa attrezzatura contemporaneamente. Mantiene 
+ * traccia in modo sicuro di chi ha in uso uno strumento, chi è in attesa, e aggiorna 
+ * costantemente lo storico degli eventi.
+ * </p>
+ *
  * @author Lorenzo Manna
  * @author Simone Biagi
- */
-public class MonitorLaboratorio {
+ */ public class MonitorLaboratorio {
     private final Catalogo catalogo;
-    private final List<EventLog> registroEventi; // Storico consultabile
+    private final List<EventLog> registroEventi;
     private final List<InfoRichiesta> listaRichieste;
     
     private ListenerLaboratorio listener;
     
     /**
+     * Inizializza il Monitor associandolo al catalogo degli strumenti.
+     * 
+     * @param catalogo Il catalogo di partenza (le cui operazioni di modifica 
+     *                 verranno protette da questo monitor).
      * @author Simone Biagi
-     * @param catalogo Il catalogo di partenza
      */
     public MonitorLaboratorio(Catalogo catalogo) {
         this.catalogo = catalogo;
@@ -27,10 +37,19 @@ public class MonitorLaboratorio {
     }
     
     /**
+     * Richiede un prestito per una specifica categoria di strumento.
+     * <p>
+     * Se lo strumento è disponibile, viene assegnato immediatamente. Se non è 
+     * disponibile, il thread chiamante viene messo in attesa ({@code wait()}) finché 
+     * non avviene una restituzione. L'intera verifica e assegnazione avviene in 
+     * modo atomico.
+     * </p>
+     * 
+     * @param tipo       La tipologia di strumento richiesta.
+     * @param nomeUtente Il nome dell'utente (thread) che effettua la richiesta.
+     * @return L'istanza dello {@link Strumento} assegnato, oppure {@code null} se 
+     *         la richiesta viene rifiutata, annullata (es. tipo rimosso) o interrotta.
      * @author Simone Biagi
-     * @param tipo Tipo di strumento richiesto
-     * @param nomeUtente Nome dell'utente richiedente
-     * @return Lo strumento assegnato, oppure null se fallito/rifiutato
      */
     public Strumento richiediStrumento(TipoStrumento tipo, String nomeUtente) {
         Strumento assegnato = null;
@@ -82,23 +101,36 @@ public class MonitorLaboratorio {
             }
         } // Fine della sezione critica. Il monitor viene rilasciato.
         
-        // Chiamata all'interfaccia FUORI dal blocco synchronized
+        // Chiamata all'interfaccia FUORI dal blocco synchronized per non bloccare l'interfaccia
         notificaCambioStato(); 
         return assegnato;
     }
 
     /**
+     * Registra un evento nel log storico del laboratorio.
+     * <p>
+     * Metodo privato sicuro perché richiamato esclusivamente all'interno 
+     * di blocchi {@code synchronized}. Non richiede un ulteriore lock.
+     * </p>
+     * 
+     * @param descrizione Il testo dell'evento da registrare.
      * @author Simone Biagi
-     * Metodo privato per aggiungere un log in tempo reale.
-     * È sicuro perché richiamato solo dall'interno di blocchi synchronized.
      */
     private void registraEvento(String descrizione) {
         registroEventi.add(new EventLog(descrizione));
     }
     
     /**
+     * Gestisce la restituzione di uno strumento al laboratorio.
+     * <p>
+     * Aggiorna lo stato dello strumento a disponibile e invoca {@code notifyAll()} 
+     * per risvegliare tutti i thread che erano bloccati in attesa nel metodo 
+     * {@code richiediStrumento}.
+     * </p>
+     * 
+     * @param strumento Lo strumento da restituire al catalogo.
+     * @param nomeUtente Il nome dell'utente che restituisce lo strumento.
      * @author Simone Biagi
-     * Restituisce uno strumento al laboratorio e risveglia i thread in attesa.
      */
     public void restituisciStrumento(Strumento strumento, String nomeUtente) {
         synchronized (this) {
@@ -113,15 +145,19 @@ public class MonitorLaboratorio {
     }
     
     /**
+     * Recupera lo storico di tutti gli eventi registrati nel sistema.
+     * 
+     * @return Una copia non modificabile della lista degli eventi (Deep copy non necessaria, gli eventi sono immutabili).
      * @author Simone Biagi
-     * Restituisce una copia dello storico per visualizzarlo o salvarlo.
      */
     public synchronized List<EventLog> getRegistroEventi() {
         return List.copyOf(registroEventi); 
     }
     
     /**
-     * Restituisce una Deep Copy della lista per evitare modifiche accidentali o da concorrenza
+     * Recupera lo stato attuale di tutte le richieste (attive o terminate) per la GUI.
+     * 
+     * @return Una copia della lista delle richieste per evitare modifiche esterne della lista
      */
     public synchronized List<InfoRichiesta> getListaRichieste() {
         List<InfoRichiesta> copia = new ArrayList<>();
@@ -132,6 +168,13 @@ public class MonitorLaboratorio {
     }
 
     /**
+     * Aggiunge un nuovo strumento al catalogo del laboratorio.
+     * <p>
+     * Segnala il nuovo inserimento risvegliando eventuali thread in attesa, 
+     * i quali controlleranno se il nuovo strumento corrisponde alla loro richiesta.
+     * </p>
+     * 
+     * @param strumento Il nuovo strumento da aggiungere.
      * @author Lorenzo Manna
      */
     public void aggiungiStrumento(Strumento strumento) {
@@ -145,6 +188,10 @@ public class MonitorLaboratorio {
     }
 
     /**
+     * Rimuove uno strumento esistente dal catalogo del laboratorio.
+     * 
+     * @param strumento Lo strumento da rimuovere (deve essere in stato DISPONIBILE).
+     * @throws IllegalStateException Se lo strumento selezionato è attualmente in prestito.
      * @author Lorenzo Manna
      */
     public void rimuoviStrumento(Strumento strumento) {
@@ -159,6 +206,9 @@ public class MonitorLaboratorio {
     }
 
     /**
+     * Imposta il listener che riceverà le notifiche sui cambiamenti di stato.
+     * 
+     * @param listener L'oggetto (generalmente la GUI) che implementa {@link ListenerLaboratorio}.
      * @author Lorenzo Manna
      */
     public void setListener(ListenerLaboratorio listener) {
@@ -166,8 +216,13 @@ public class MonitorLaboratorio {
     }
     
     /**
+     * Notifica l'interfaccia grafica di un cambiamento di stato.
+     * <p>
+     * Utilizza {@code SwingUtilities.invokeLater()} per assicurarsi che 
+     * l'aggiornamento della UI avvenga esclusivamente sull'Event Dispatch Thread (EDT).
+     * </p>
+     * 
      * @author Lorenzo Manna
-     * Aggiorna la GUI tramite SwingUtilities (Non blocca mai il Monitor)
      */
     private void notificaCambioStato() {
         if (listener != null) {
@@ -176,6 +231,9 @@ public class MonitorLaboratorio {
     }
 
     /**
+     * Restituisce la lista di tutti gli strumenti presenti nel laboratorio.
+     * 
+     * @return Una vista in sola lettura della lista degli strumenti.
      * @author Simone Biagi
      */
     public synchronized List<Strumento> getTuttiStrumenti() {
@@ -183,6 +241,9 @@ public class MonitorLaboratorio {
     }
     
     /**
+     * Restituisce la lista degli strumenti attualmente assegnati a un utente.
+     * 
+     * @return La lista degli strumenti filtrati per stato IN_PRESTITO.
      * @author Simone Biagi
      */
     public synchronized List<Strumento> getStrumentiInPrestito(){
@@ -190,6 +251,9 @@ public class MonitorLaboratorio {
     }
 
     /**
+     * Restituisce il conteggio degli strumenti liberi e disponibili.
+     * 
+     * @return Il numero di strumenti in stato DISPONIBILE.
      * @author Simone Biagi
      */
     public synchronized int getNumeroDisponibili() {
@@ -197,6 +261,9 @@ public class MonitorLaboratorio {
     }
 
     /**
+     * Restituisce il conteggio degli strumenti attualmente assegnati.
+     * 
+     * @return Il numero di strumenti in stato IN_PRESTITO.
      * @author Simone Biagi
      */
     public synchronized int getNumeroInPrestito() {
@@ -204,13 +271,18 @@ public class MonitorLaboratorio {
     }
 
     /**
+     * Aggiorna lo stato della richiesta per un determinato utente, oppure 
+     * ne crea una nuova se l'utente non è ancora presente in lista.
+     * 
+     * @param utente Il nome dell'utente associato alla richiesta.
+     * @param tipo   La categoria di strumento richiesta.
+     * @param stato  Il nuovo stato da assegnare alla richiesta (es. IN_ATTESA).
      * @author Lorenzo Manna
-     * Metodo di servizio (da chiamare all'interno di blocchi synchronized)
-     * Crea un nuovo oggetto per la sovrascrittura in lista garantendo thread-safety
      */
     private void aggiornaOCreaRichiesta(String utente, TipoStrumento tipo, StatoPrestito stato) {
         for (int i = 0; i < listaRichieste.size(); i++) {
             if (listaRichieste.get(i).getNomeUtente().equals(utente)) {
+                // Sostituisce interamente l'oggetto per garantire thread-safety in caso di estrazione simultanea
                 listaRichieste.set(i, new InfoRichiesta(utente, tipo, stato));
                 return;
             }
@@ -219,6 +291,9 @@ public class MonitorLaboratorio {
     }
     
     /**
+     * Sovrascrive completamente lo storico eventi con i dati caricati da file.
+     * 
+     * @param registroEventi La lista di eventi precedentemente salvati.
      * @author Lorenzo Manna
      */
     public void setRegistroEventi(List<EventLog> registroEventi) {
@@ -230,6 +305,10 @@ public class MonitorLaboratorio {
     }
     
     /**
+     * Ricostruisce l'intero catalogo basandosi su una lista di strumenti 
+     * ricaricati dal salvataggio persistente.
+     * 
+     * @param catalogo Un oggetto Catalogo temporaneo ricostruito dal file.
      * @author Lorenzo Manna
      */
     public void setCatalogo(Catalogo catalogo) {

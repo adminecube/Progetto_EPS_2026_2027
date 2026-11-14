@@ -14,29 +14,49 @@ import it.unibs.eps.labmanager.model.Strumento;
 import it.unibs.eps.labmanager.model.TipoStrumento;
 
 /**
- * Gestisce il salvataggio e il caricamento del catalogo degli strumenti su file testuale.
+ * Classe di utilità che gestisce il salvataggio e il caricamento del catalogo 
+ * degli strumenti su file testuale.
+ * <p>
+ * Isola la logica di I/O dal resto dell'applicazione. 
+ * </p>
  */
-
 public class GestoreCatalogoFile {
-	// Definisce il nome del file su cui verr� salvato il catalogo
-	private static final String FILE_CATALOGO = "catalogo_strumenti.txt";
     
-	private GestoreCatalogoFile() {
-		super();
-	}
+    /** Nome del file su cui verrà salvato il catalogo */
+    private static final String FILE_CATALOGO = "catalogo_strumenti.txt";
+    
     /**
-     * Salva la lista degli strumenti fornita su file.
-     * Deve essere chiamato passando una copia dei dati e MAI mentre il monitor � bloccato.
-     * 
-     * @param strumenti
+     * Costruttore privato per impedire l'istanziazione di questa classe di utilità.
      */
-	public static void salvaCatalogo(Catalogo catalogo) throws IOException {
+    private GestoreCatalogoFile() {
+        super();
+    }
+    
+    /**
+     * Salva l'intero contenuto di un oggetto {@link Catalogo} su file.
+     * <p>
+     * Estrae la lista degli strumenti dal catalogo e la delega al metodo di salvataggio.
+     * </p>
+     * 
+     * @param catalogo L'oggetto Catalogo da salvare. Deve contenere i dati aggiornati.
+     * @throws IOException Se si verifica un errore durante l'apertura o la scrittura del file.
+     * @throws IllegalArgumentException Se il catalogo passato è nullo.
+     */
+    public static void salvaCatalogo(Catalogo catalogo) throws IOException {
         if (catalogo == null) {
             throw new IllegalArgumentException("Impossibile salvare un catalogo nullo.");
         }
         salvaCatalogo(catalogo.getTuttiStrumenti());
     }
 
+    /**
+     * salva la lista degli strumenti su file testuale.
+     * I campi di ogni strumento (ID, Tipo, Stato) vengono separati dal carattere punto e virgola (;).
+     * 
+     * @param listaStrumenti La lista di {@link Strumento} da rendere persistente.
+     * @throws IOException Se si verifica un errore di scrittura sul disco.
+     * @throws IllegalArgumentException Se la lista passata è nulla.
+     */
     public static void salvaCatalogo(List<Strumento> listaStrumenti) throws IOException {
         if (listaStrumenti == null) {
             throw new IllegalArgumentException("Lista strumenti nulla.");
@@ -51,11 +71,13 @@ public class GestoreCatalogoFile {
     }
 
     /**
-     * Carica gli strumenti dal file e restituisce una lista.
-     * 
-     * @return Una lista di Strumento caricata dal file, o una lista vuota se il file non esiste/� vuoto.
+     * Carica gli strumenti dal file di testo e ricostruisce un oggetto {@link Catalogo}.
+     * <p>
+     *  
+     * @return Un nuovo {@link Catalogo} popolato con i dati del file, oppure 
+     *         un catalogo vuoto se è il primo avvio e il file non esiste.
+     * @throws IOException Se si verifica un errore di lettura o se il file è illeggibile.
      */
-    
     public static Catalogo caricaCatalogo() throws IOException {
         Catalogo catalogo = new Catalogo();
 
@@ -67,7 +89,7 @@ public class GestoreCatalogoFile {
                     String id = parti[0];
                     TipoStrumento tipo = TipoStrumento.valueOf(parti[1]);
                     
-                    // Vedi nota sotto sullo stato al caricamento
+                    // Ripristino dello strumento (impostato sempre come DISPONIBILE all'avvio)
                     Strumento strumento = new Strumento(id, tipo);
                     strumento.setStato(StatoStrumento.DISPONIBILE);
                     catalogo.aggiungiStrumento(strumento);

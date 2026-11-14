@@ -7,6 +7,15 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.function.Consumer;
 
+/**
+ * Finestra di dialogo dedicata alla creazione e all'aggiunta di un nuovo {@link Strumento}
+ * al catalogo del laboratorio.
+ * <p>
+ * Raccoglie l'input dell'utente (Tipologia e ID) e utilizza una callback per
+ * restituire lo strumento creato alla finestra chiamante (MainFrame), mantenendo
+ * così l'interfaccia disaccoppiata dalla logica di dominio.
+ * </p>
+ */
 public class FrameCreaStrumento extends JFrame {
 
     private JTextField txtId;
@@ -14,7 +23,14 @@ public class FrameCreaStrumento extends JFrame {
     private JButton btnSalva;
     private JButton btnAnnulla;
 
-    public FrameCreaStrumento(Consumer<Strumento> onStrumentoCreato) {
+    /**
+     * Costruisce la finestra per la creazione di un nuovo strumento.
+     *
+     * @param creaStrumento Callback di tipo {@link Consumer} che viene invocata 
+     *                          quando l'utente clicca su "Salva" e l'input è valido. 
+     *                          Riceve come parametro l'istanza del nuovo {@link Strumento}.
+     */
+    public FrameCreaStrumento(Consumer<Strumento> creaStrumento) {
         setTitle("Aggiungi Strumento");
         setSize(320, 200);
         setLocationRelativeTo(null);
@@ -51,7 +67,7 @@ public class FrameCreaStrumento extends JFrame {
 
             try {
                 Strumento nuovoStrumento = new Strumento(id, tipo);
-                onStrumentoCreato.accept(nuovoStrumento); // Invia lo strumento a MainFrame
+                creaStrumento.accept(nuovoStrumento); // Invia lo strumento a MainFrame
                 txtId.setText("");
                 setVisible(false);
             } catch (Exception ex) {
