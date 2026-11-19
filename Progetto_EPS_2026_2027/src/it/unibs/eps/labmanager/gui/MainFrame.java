@@ -20,6 +20,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
@@ -105,7 +106,7 @@ public class MainFrame extends JFrame {
 		this.monitor = monitor;
 		this.gestoreSimulazione = gestoreSimulazione;
 		
-		monitor.setListener(() -> aggiornaGUI());
+		monitor.setListener(() -> SwingUtilities.invokeLater(() -> aggiornaGUI()));
 		
 		InitUI();
 		setBtnListeners();

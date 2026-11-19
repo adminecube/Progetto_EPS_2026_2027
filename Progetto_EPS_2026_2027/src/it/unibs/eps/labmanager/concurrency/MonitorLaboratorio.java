@@ -54,7 +54,7 @@ import java.util.List;
     public Strumento richiediStrumento(TipoStrumento tipo, String nomeUtente) {
         Strumento assegnato = null;
         
-        // Entriamo nel monitor per gestire in modo atomico la disponibilità
+        // lock del monitor per gestire in modo atomico la disponibilità
         synchronized (this) {
             if (!catalogo.esisteTipoStrumento(tipo)) {
                 registraEvento("Richiesta rifiutata per " + nomeUtente + ": nessun " + tipo + " in catalogo");
@@ -99,7 +99,7 @@ import java.util.List;
                     assegnato = strumentoTrovato;
                 }
             }
-        } // Fine della sezione critica. Il monitor viene rilasciato.
+        } 
         
         // Chiamata all'interfaccia FUORI dal blocco synchronized per non bloccare l'interfaccia
         notificaCambioStato(); 
@@ -108,10 +108,6 @@ import java.util.List;
 
     /**
      * Registra un evento nel log storico del laboratorio.
-     * <p>
-     * Metodo privato sicuro perché richiamato esclusivamente all'interno 
-     * di blocchi {@code synchronized}. Non richiede un ulteriore lock.
-     * </p>
      * 
      * @param descrizione Il testo dell'evento da registrare.
      * @author Simone Biagi
@@ -208,7 +204,7 @@ import java.util.List;
     /**
      * Imposta il listener che riceverà le notifiche sui cambiamenti di stato.
      * 
-     * @param listener L'oggetto (generalmente la GUI) che implementa {@link ListenerLaboratorio}.
+     * @param listener L'oggetto che implementa {@link ListenerLaboratorio}.
      * @author Lorenzo Manna
      */
     public void setListener(ListenerLaboratorio listener) {
@@ -226,7 +222,7 @@ import java.util.List;
      */
     private void notificaCambioStato() {
         if (listener != null) {
-            javax.swing.SwingUtilities.invokeLater(() -> listener.statoCambiato());
+           listener.statoCambiato();
         }
     }
 
