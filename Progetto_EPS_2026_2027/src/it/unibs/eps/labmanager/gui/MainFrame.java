@@ -116,7 +116,6 @@ public class MainFrame extends JFrame {
     /**
      * Aggiorna tutti i componenti visivi dell'interfaccia (tabelle e pannelli superiori)
      * richiamando i dati più recenti dal monitor.
-     * Metodo tipicamente invocato dal thread dell'interfaccia (EDT) a seguito di un evento.
      */
 	public void aggiornaGUI() {
 		aggiornaTabStrumenti();

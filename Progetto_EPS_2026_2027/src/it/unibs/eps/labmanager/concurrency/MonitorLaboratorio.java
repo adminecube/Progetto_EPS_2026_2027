@@ -213,11 +213,6 @@ import java.util.List;
     
     /**
      * Notifica l'interfaccia grafica di un cambiamento di stato.
-     * <p>
-     * Utilizza {@code SwingUtilities.invokeLater()} per assicurarsi che 
-     * l'aggiornamento della UI avvenga esclusivamente sull'Event Dispatch Thread (EDT).
-     * </p>
-     * 
      * @author Lorenzo Manna
      */
     private void notificaCambioStato() {
