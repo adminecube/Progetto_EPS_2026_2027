@@ -1,35 +1,46 @@
 package it.unibs.eps.labmanager.model;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  *	Contenitore e gestore dell'insieme di strumenti fisici presenti nel laboratorio.
- * 	@author biagi
+ * 	@author Simone Biagi
  *
  */
 public class Catalogo {
 	private final List<Strumento> strumenti;
+	private static final int MAX_STRUMENTI = 5;
 	
 	public Catalogo() {
 		this.strumenti=new ArrayList<>();
 	}
 	//metodi 
 	public void aggiungiStrumento(Strumento strumento){
-		if(strumenti.contains(strumento))
-			throw new IllegalArgumentException("Lo strumento con codice " + strumento.getId() + "e' gia presente");
-		else if(strumento == null)
+		if(strumento == null)
 			throw new IllegalArgumentException("Lo strumento non puo' essere nullo");
+		else if(strumenti.contains(strumento))
+			throw new IllegalArgumentException("Lo strumento con codice " + strumento.getId() + " e' gia presente");
+		else if(strumenti.size() >= MAX_STRUMENTI)
+			throw new IllegalArgumentException("Impossibile aggiungere piÃ¹ di 5 strumenti");
 		else
 			strumenti.add(strumento);
 	}
-	
+	public void rimuoviStrumento(Strumento strumento) {
+		
+		if(strumento == null)
+			throw new IllegalArgumentException("Lo strumento selezionato non puo' essere nullo");
+		else if(!strumenti.contains(strumento))
+			throw new IllegalArgumentException("Lo strumento selezionato non esiste.");
+		else
+			strumenti.remove(strumento);
+		
+	}
 	
 	/**
 	 * @param tipo 	il tipo di strumento richiesto
-	 * @return		ritorna il primo strumento libero richiesto, oppure ritorna null se non è disponibile nessuno strumento
+	 * @return		ritorna il primo strumento libero richiesto, oppure ritorna null se non ï¿½ disponibile nessuno strumento
 	 */
 	public Strumento trovaStrumentoDisponibile(TipoStrumento tipo) {
 		return strumenti.stream()					// 1. Converte la lista degli strumenti in un flusso di dati (Stream)
@@ -40,7 +51,7 @@ public class Catalogo {
 	}
 	
 	public List<Strumento> getTuttiStrumenti(){
-		return Collections.unmodifiableList(strumenti);
+		return List.copyOf(strumenti);
 	}
 	
 	public List<Strumento> getStrumentiDisponibili(){
@@ -49,11 +60,22 @@ public class Catalogo {
 				.collect(Collectors.toList());
 	}
 	
+	public boolean esisteTipoStrumento(TipoStrumento tipo) {
+	    if (tipo == null) return false;
+	    return strumenti.stream()
+	            .anyMatch(s -> s.getTipo() == tipo);
+	}
+	
 	public List<Strumento> getStrumentiInPrestito(){
 		return strumenti.stream()
 				.filter(s->s.getStato() == StatoStrumento.IN_PRESTITO)
 				.collect(Collectors.toList());
 	}
+	
+	public void clear() {
+		strumenti.clear();
+	}
+	
 	@Override
 	public String toString() {
 	    if (strumenti.isEmpty()) {
@@ -66,6 +88,4 @@ public class Catalogo {
 	    }
 	    return sb.toString().trim();
 	}
-	
-	
 }

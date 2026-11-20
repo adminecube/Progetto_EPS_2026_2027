@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"it.unibs.eps.labmanager.concurrency"},{"l":"it.unibs.eps.labmanager.gui"},{"l":"it.unibs.eps.labmanager.main"},{"l":"it.unibs.eps.labmanager.model"},{"l":"it.unibs.eps.labmanager.persistence"},{"l":"it.unibs.eps.labmanager.simulation"}];updateSearchResults();

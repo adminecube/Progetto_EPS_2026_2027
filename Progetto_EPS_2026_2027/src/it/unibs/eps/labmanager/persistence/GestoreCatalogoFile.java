@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
 
 import it.unibs.eps.labmanager.model.Catalogo;
 import it.unibs.eps.labmanager.model.StatoStrumento;
@@ -13,77 +14,91 @@ import it.unibs.eps.labmanager.model.Strumento;
 import it.unibs.eps.labmanager.model.TipoStrumento;
 
 /**
- * Gestisce il salvataggio e il caricamento del catalogo degli strumenti su file testuale.
+ * Classe di utilit√† che gestisce il salvataggio e il caricamento del catalogo 
+ * degli strumenti su file testuale.
+ * <p>
+ * Isola la logica di I/O dal resto dell'applicazione. 
+ * </p>
  */
-
 public class GestoreCatalogoFile {
-	// Definisce il nome del file su cui verr‡ salvato il catalogo
-	private static final String FILE_CATALOGO = "catalogo_strumenti.txt";
+    
+    /** Nome del file su cui verr√† salvato il catalogo */
+    private static final String FILE_CATALOGO = "catalogo_strumenti.txt";
     
     /**
-     * Salva la lista degli strumenti fornita su file.
-     * Deve essere chiamato passando una copia dei dati e MAI mentre il monitor Ë bloccato.
-     * 
-     * @param strumenti
+     * Costruttore privato per impedire l'istanziazione di questa classe di utilit√†.
      */
-    public void salvaCatalogo(Catalogo catalogo) {
-    	if (catalogo == null) {
-            System.err.println("Impossibile salvare un catalogo nullo.");
-            return;
-        }
-    	// Usa un blocco try-with-resources per garantire la chiusura automatica del file (BufferedWriter)
-    	try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_CATALOGO))){
-    		for(Strumento s:catalogo.getTuttiStrumenti()) {
-    			// Formatta i dati dello strumento separandoli con un punto e virgola (ID;TIPO;STATO)
-    			String linea = s.getId()+";"+s.getTipo()+";"+s.getStato();
-    			writer.write(linea);
-    			writer.newLine();
-    		}
-    	}catch(IOException e) {
-    		System.err.println("Errore durante il salvataggio del catalogo: " + e.getMessage());
-    	}
+    private GestoreCatalogoFile() {
+        super();
     }
     
     /**
-     * Carica gli strumenti dal file e restituisce una lista.
+     * Salva l'intero contenuto di un oggetto {@link Catalogo} su file.
+     * <p>
+     * Estrae la lista degli strumenti dal catalogo e la delega al metodo di salvataggio.
+     * </p>
      * 
-     * @return Una lista di Strumento caricata dal file, o una lista vuota se il file non esiste/Ë vuoto.
+     * @param catalogo L'oggetto Catalogo da salvare. Deve contenere i dati aggiornati.
+     * @throws IOException Se si verifica un errore durante l'apertura o la scrittura del file.
+     * @throws IllegalArgumentException Se il catalogo passato √® nullo.
      */
-    public Catalogo caricaCatalogo() {
-    	Catalogo catalogo = new Catalogo();
-    	
-    	// Usa un blocco try-with-resources per aprire in lettura il file in modo sicuro (BufferedReader)
+    public static void salvaCatalogo(Catalogo catalogo) throws IOException {
+        if (catalogo == null) {
+            throw new IllegalArgumentException("Impossibile salvare un catalogo nullo.");
+        }
+        salvaCatalogo(catalogo.getTuttiStrumenti());
+    }
+
+    /**
+     * salva la lista degli strumenti su file testuale.
+     * I campi di ogni strumento (ID, Tipo, Stato) vengono separati dal carattere punto e virgola (;).
+     * 
+     * @param listaStrumenti La lista di {@link Strumento} da rendere persistente.
+     * @throws IOException Se si verifica un errore di scrittura sul disco.
+     * @throws IllegalArgumentException Se la lista passata √® nulla.
+     */
+    public static void salvaCatalogo(List<Strumento> listaStrumenti) throws IOException {
+        if (listaStrumenti == null) {
+            throw new IllegalArgumentException("Lista strumenti nulla.");
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_CATALOGO))) {
+            for (Strumento s : listaStrumenti) {
+                String linea = s.getId() + ";" + s.getTipo() + ";" + s.getStato();
+                writer.write(linea);
+                writer.newLine();
+            }
+        }
+    }
+
+    /**
+     * Carica gli strumenti dal file di testo e ricostruisce un oggetto {@link Catalogo}.
+     * <p>
+     *  
+     * @return Un nuovo {@link Catalogo} popolato con i dati del file, oppure 
+     *         un catalogo vuoto se √® il primo avvio e il file non esiste.
+     * @throws IOException Se si verifica un errore di lettura o se il file √® illeggibile.
+     */
+    public static Catalogo caricaCatalogo() throws IOException {
+        Catalogo catalogo = new Catalogo();
+
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_CATALOGO))) {
-        	// Dichiara una variabile per memorizzare temporaneamente ogni riga letta
-        	String linea;
-        	
-        	// Continua a leggere riga per riga finchÈ non si raggiunge la fine del file (reader.readLine() restituisce null)
-        	while ((linea = reader.readLine()) != null) {
-        		// Divide la riga in un array di stringhe usando il punto e virgola come separatore
-        		String[] parti = linea.split(";");
-        		
-        		// Verifica che la riga sia ben formattata e contenga esattamente 3 elementi (ID, Tipo, Stato)
-        		if(parti.length==3) {
-        			String id = parti[0];
-        			TipoStrumento tipo = TipoStrumento.valueOf(parti[1]);
-        			StatoStrumento stato = StatoStrumento.valueOf(parti[2]);
-        			
-        			//Creo un nuovo oggetto strumento con le caratteristiche rilevate
-        			Strumento strumento = new Strumento(id,tipo);
-        			strumento.setStato(stato);
-        			//lo aggiungo alla lista strumenti caricati
-        			catalogo.aggiungiStrumento(strumento);
-        		}
-        	}
-        	
+            String linea;
+            while ((linea = reader.readLine()) != null) {
+                String[] parti = linea.split(";");
+                if (parti.length == 3) {
+                    String id = parti[0];
+                    TipoStrumento tipo = TipoStrumento.valueOf(parti[1]);
+                    
+                    // Ripristino dello strumento (impostato sempre come DISPONIBILE all'avvio)
+                    Strumento strumento = new Strumento(id, tipo);
+                    strumento.setStato(StatoStrumento.DISPONIBILE);
+                    catalogo.aggiungiStrumento(strumento);
+                }
+            }
         } catch (FileNotFoundException e) {
-        	System.out.println("Nessun catalogo precedente trovato (primo avvio). Il catalogo partir‡ vuoto.");
-		} catch (IOException e) {
-			System.err.println("Errore di I/O durante la lettura del catalogo: " + e.getMessage());
-		} catch (IllegalArgumentException e) {
-			System.err.println("Errore nella formattazione dei dati nel file del catalogo.");
-		}
-        // Restituisce la lista (che sar‡ piena se il file c'era, o vuota se c'Ë stato un problema/primo avvio)
+            // Al primo avvio il file pu√≤ non esistere: si restituisce un catalogo vuoto
+            return catalogo;
+        }
         return catalogo;
     }
     
